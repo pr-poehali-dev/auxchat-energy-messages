@@ -87,6 +87,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         response = urllib.request.urlopen(req)
         result = json.loads(response.read().decode('utf-8'))
         
+        print(f"SMS.RU response: {result}")
+        
         cur.close()
         conn.close()
         
