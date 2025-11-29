@@ -80,16 +80,16 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             'body': json.dumps({'error': 'Admin ID required'})
         }
     
-    cur.execute("SELECT id FROM t_p53416936_auxchat_energy_messa.users WHERE id = %s AND phone = '+79999999999'", (admin_id,))
-    admin_data = cur.fetchone()
+    admin_secret = body_data.get('admin_secret')
+    expected_secret = os.environ.get('ADMIN_SECRET')
     
-    if not admin_data:
+    if not admin_secret or admin_secret != expected_secret:
         cur.close()
         conn.close()
         return {
             'statusCode': 403,
             'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-            'body': json.dumps({'error': 'Access denied'})
+            'body': json.dumps({'error': 'Invalid admin secret'})
         }
     
     if action == 'add_energy':

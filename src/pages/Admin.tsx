@@ -29,16 +29,20 @@ export default function Admin() {
   const navigate = useNavigate();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
-  const [adminId, setAdminId] = useState<number | null>(null);
+  const [adminSecret, setAdminSecret] = useState<string>("");
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [energyAmount, setEnergyAmount] = useState<number>(0);
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
 
   useEffect(() => {
-    const storedUserId = localStorage.getItem("userId");
-    if (storedUserId) {
-      setAdminId(parseInt(storedUserId));
+    const storedSecret = localStorage.getItem("admin_secret");
+    if (storedSecret) {
+      setAdminSecret(storedSecret);
+      setIsAuthenticated(true);
+      loadUsers();
+    } else {
+      setLoading(false);
     }
-    loadUsers();
   }, []);
 
   const loadUsers = async () => {
@@ -57,8 +61,23 @@ export default function Admin() {
     }
   };
 
+  const handleLogin = () => {
+    if (adminSecret.trim()) {
+      localStorage.setItem("admin_secret", adminSecret);
+      setIsAuthenticated(true);
+      loadUsers();
+    }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("admin_secret");
+    setAdminSecret("");
+    setIsAuthenticated(false);
+    navigate("/");
+  };
+
   const addEnergy = async (userId: number, amount: number) => {
-    if (!adminId) {
+    if (!adminSecret) {
       alert("Войдите в систему");
       return;
     }
@@ -70,7 +89,7 @@ export default function Admin() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            admin_id: adminId,
+            admin_secret: adminSecret,
             action: "add_energy",
             target_user_id: userId,
             amount: amount,
@@ -84,7 +103,13 @@ export default function Admin() {
         alert(`Добавлено ${amount} энергии`);
         loadUsers();
       } else {
-        alert("Ошибка: " + (data.error || "Нет доступа"));
+        if (data.error === "Invalid admin secret") {
+          alert("Неверный секретный ключ");
+          localStorage.removeItem("admin_secret");
+          setIsAuthenticated(false);
+        } else {
+          alert("Ошибка: " + (data.error || "Нет доступа"));
+        }
       }
     } catch (error) {
       console.error("Error adding energy:", error);
@@ -100,6 +125,38 @@ export default function Admin() {
     );
   }
 
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 flex items-center justify-center p-4">
+        <Card className="w-full max-w-md p-6">
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h1 className="text-2xl font-bold">Авторизация админа</h1>
+              <Button variant="ghost" onClick={() => navigate("/")}>
+                <Icon name="X" size={20} />
+              </Button>
+            </div>
+            <div>
+              <Label htmlFor="secret">Секретный ключ</Label>
+              <Input
+                id="secret"
+                type="password"
+                value={adminSecret}
+                onChange={(e) => setAdminSecret(e.target.value)}
+                placeholder="Введите секретный ключ"
+                className="mt-2"
+                onKeyDown={(e) => e.key === "Enter" && handleLogin()}
+              />
+            </div>
+            <Button onClick={handleLogin} className="w-full" disabled={!adminSecret.trim()}>
+              Войти
+            </Button>
+          </div>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 p-4">
       <div className="max-w-6xl mx-auto">
@@ -111,10 +168,16 @@ export default function Admin() {
             </Button>
             <h1 className="text-3xl font-bold">Админ-панель</h1>
           </div>
-          <Button variant="outline" onClick={loadUsers}>
-            <Icon name="RefreshCw" size={18} className="mr-2" />
-            Обновить
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={loadUsers}>
+              <Icon name="RefreshCw" size={18} className="mr-2" />
+              Обновить
+            </Button>
+            <Button variant="outline" onClick={handleLogout}>
+              <Icon name="LogOut" size={18} className="mr-2" />
+              Выйти
+            </Button>
+          </div>
         </div>
 
         <div className="grid gap-4">

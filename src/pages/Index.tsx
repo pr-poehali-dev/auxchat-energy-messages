@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -31,27 +31,11 @@ interface User {
 
 const Index = () => {
   const [user, setUser] = useState<User | null>(null);
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: 1,
-      username: "Космонавт",
-      avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Cosmonaut",
-      text: "Привет, AuxChat! Первое сообщение в чате!",
-      timestamp: new Date(Date.now() - 3600000),
-      reactions: [
-        { emoji: "❤️", count: 5 },
-        { emoji: "🔥", count: 3 },
-      ],
-    },
-    {
-      id: 2,
-      username: "Энергетик",
-      avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Energy",
-      text: "Система энергии работает отлично!",
-      timestamp: new Date(Date.now() - 1800000),
-      reactions: [{ emoji: "👍", count: 8 }],
-    },
-  ]);
+  const [userId, setUserId] = useState<number | null>(() => {
+    const stored = localStorage.getItem('auxchat_user_id');
+    return stored ? parseInt(stored) : null;
+  });
+  const [messages, setMessages] = useState<Message[]>([]);
   const [messageText, setMessageText] = useState("");
   const [isRegistering, setIsRegistering] = useState(false);
   const [username, setUsername] = useState("");
@@ -65,6 +49,62 @@ const Index = () => {
   const [newUsername, setNewUsername] = useState("");
 
   const reactionEmojis = ["❤️", "👍", "🔥", "🎉", "😂", "😍"];
+
+  const loadMessages = async () => {
+    try {
+      const response = await fetch(
+        "https://functions.poehali.dev/392f3078-9f28-4640-ab86-dcabecaf721a?limit=50&offset=0"
+      );
+      const data = await response.json();
+      if (response.ok && data.messages) {
+        const formattedMessages: Message[] = data.messages.map((msg: any) => ({
+          id: msg.id,
+          username: msg.user.username,
+          avatar: msg.user.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${msg.user.username}`,
+          text: msg.text,
+          timestamp: new Date(msg.created_at),
+          reactions: msg.reactions || [],
+        }));
+        setMessages(formattedMessages.reverse());
+      }
+    } catch (error) {
+      console.error("Load messages error:", error);
+    }
+  };
+
+  const loadUser = async (id: number) => {
+    try {
+      const response = await fetch(
+        `https://functions.poehali.dev/518f730f-1a8e-45ad-b0ed-e9a66c5a3784?user_id=${id}`
+      );
+      const data = await response.json();
+      if (response.ok) {
+        setUser({
+          username: data.username,
+          avatar: data.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${data.username}`,
+          phone: data.phone,
+          energy: data.energy,
+        });
+      } else {
+        localStorage.removeItem('auxchat_user_id');
+        setUserId(null);
+      }
+    } catch (error) {
+      console.error("Load user error:", error);
+    }
+  };
+
+  useEffect(() => {
+    loadMessages();
+    const interval = setInterval(loadMessages, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    if (userId) {
+      loadUser(userId);
+    }
+  }, [userId]);
 
   const handlePhoneSubmit = async () => {
     if (phone.length >= 10) {
@@ -109,7 +149,27 @@ const Index = () => {
         );
         const data = await response.json();
         if (response.ok) {
-          setStep("profile");
+          if (data.is_new) {
+            setStep("profile");
+          } else {
+            const userResponse = await fetch(
+              `https://functions.poehali.dev/518f730f-1a8e-45ad-b0ed-e9a66c5a3784?user_id=${data.user_id}`
+            );
+            const userData = await userResponse.json();
+            if (userResponse.ok) {
+              setUser({
+                username: userData.username,
+                avatar: userData.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${userData.username}`,
+                phone: userData.phone,
+                energy: userData.energy,
+              });
+              setUserId(data.user_id);
+              localStorage.setItem('auxchat_user_id', data.user_id.toString());
+              setIsRegistering(false);
+              setStep("phone");
+              setSmsCode("");
+            }
+          }
         } else {
           alert("Неверный код: " + (data.error || "Попробуйте еще раз"));
         }
@@ -122,6 +182,8 @@ const Index = () => {
 
   const handleLogout = () => {
     setUser(null);
+    setUserId(null);
+    localStorage.removeItem('auxchat_user_id');
     setShowProfile(false);
   };
 
@@ -144,27 +206,49 @@ const Index = () => {
     }
   };
 
-  const handleRegister = () => {
+  const handleRegister = async () => {
     if (username.trim() && phone) {
-      setUser({
-        username: username.trim(),
-        avatar:
-          avatarFile ||
-          `https://api.dicebear.com/7.x/avataaars/svg?seed=${username}`,
-        phone: phone,
-        energy: 100,
-      });
-      setIsRegistering(false);
-      setStep("phone");
-      setPhone("");
-      setSmsCode("");
-      setUsername("");
-      setAvatarFile("");
+      try {
+        const response = await fetch(
+          "https://functions.poehali.dev/ce477ede-fb67-4de1-8f61-ad91d7ba3623",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              phone,
+              username: username.trim(),
+              avatar: avatarFile || `https://api.dicebear.com/7.x/avataaars/svg?seed=${username}`,
+            }),
+          }
+        );
+        const data = await response.json();
+        if (response.ok) {
+          setUser({
+            username: data.username,
+            avatar: data.avatar,
+            phone: data.phone,
+            energy: data.energy,
+          });
+          setUserId(data.id);
+          localStorage.setItem('auxchat_user_id', data.id.toString());
+          setIsRegistering(false);
+          setStep("phone");
+          setPhone("");
+          setSmsCode("");
+          setUsername("");
+          setAvatarFile("");
+        } else {
+          alert("Ошибка создания профиля: " + (data.error || "Попробуйте позже"));
+        }
+      } catch (error) {
+        console.error("Registration error:", error);
+        alert("Ошибка подключения");
+      }
     }
   };
 
-  const handleSendMessage = () => {
-    if (!user) {
+  const handleSendMessage = async () => {
+    if (!user || !userId) {
       setIsRegistering(true);
       return;
     }
@@ -175,18 +259,30 @@ const Index = () => {
     }
 
     if (messageText.trim()) {
-      const newMessage: Message = {
-        id: messages.length + 1,
-        username: user.username,
-        avatar: user.avatar,
-        text: messageText.trim(),
-        timestamp: new Date(),
-        reactions: [],
-      };
-
-      setMessages([...messages, newMessage].slice(-10));
-      setMessageText("");
-      setUser({ ...user, energy: user.energy - 10 });
+      try {
+        const response = await fetch(
+          "https://functions.poehali.dev/8d34c54f-b2de-42c1-ac0c-9f6ecf5e16f6",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              user_id: userId,
+              text: messageText.trim(),
+            }),
+          }
+        );
+        const data = await response.json();
+        if (response.ok) {
+          setUser({ ...user, energy: data.new_energy });
+          setMessageText("");
+          loadMessages();
+        } else {
+          alert("Ошибка отправки: " + (data.error || "Попробуйте позже"));
+        }
+      } catch (error) {
+        console.error("Send message error:", error);
+        alert("Ошибка подключения");
+      }
     }
   };
 
