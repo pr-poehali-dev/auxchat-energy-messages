@@ -286,28 +286,32 @@ const Index = () => {
     }
   };
 
-  const handleAddReaction = (messageId: number, emoji: string) => {
-    setMessages(
-      messages.map((msg) => {
-        if (msg.id === messageId) {
-          const existingReaction = msg.reactions.find((r) => r.emoji === emoji);
-          if (existingReaction) {
-            return {
-              ...msg,
-              reactions: msg.reactions.map((r) =>
-                r.emoji === emoji ? { ...r, count: r.count + 1 } : r,
-              ),
-            };
-          } else {
-            return {
-              ...msg,
-              reactions: [...msg.reactions, { emoji, count: 1 }],
-            };
-          }
+  const handleAddReaction = async (messageId: number, emoji: string) => {
+    if (!userId) {
+      alert("Войдите в систему");
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        "https://functions.poehali.dev/71ceb200-e467-4cf1-8f37-7d831ae549e7",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            user_id: userId,
+            message_id: messageId,
+            emoji: emoji,
+          }),
         }
-        return msg;
-      }),
-    );
+      );
+      
+      if (response.ok) {
+        loadMessages();
+      }
+    } catch (error) {
+      console.error("Add reaction error:", error);
+    }
   };
 
   const handleTopUp = (amount: number) => {

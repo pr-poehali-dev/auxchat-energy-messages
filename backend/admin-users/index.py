@@ -30,7 +30,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     
     if method == 'GET':
         cur.execute("""
-            SELECT id, phone, username, avatar_url, energy, created_at
+            SELECT id, phone, username, avatar_url, energy, created_at, is_banned
             FROM t_p53416936_auxchat_energy_messa.users
             ORDER BY created_at DESC
         """)
@@ -44,7 +44,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 'avatar': row[3],
                 'energy': row[4],
                 'is_admin': False,
-                'is_banned': False,
+                'is_banned': row[6] if row[6] is not None else False,
                 'created_at': row[5].isoformat()
             })
         
@@ -67,18 +67,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         }
     
     body_data = json.loads(event.get('body', '{}'))
-    admin_id = body_data.get('admin_id')
     action = body_data.get('action')
     target_user_id = body_data.get('target_user_id')
-    
-    if not admin_id:
-        cur.close()
-        conn.close()
-        return {
-            'statusCode': 401,
-            'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-            'body': json.dumps({'error': 'Admin ID required'})
-        }
     
     admin_secret = body_data.get('admin_secret')
     expected_secret = os.environ.get('ADMIN_SECRET')
@@ -96,7 +86,24 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         amount = body_data.get('amount', 0)
         cur.execute("UPDATE t_p53416936_auxchat_energy_messa.users SET energy = energy + %s WHERE id = %s", (amount, target_user_id))
         conn.commit()
-        result = {'message': f"Added {amount} energy"}
+        result = {'message': f"Added {amount} energy", 'success': True}
+        
+    elif action == 'ban':
+        cur.execute("UPDATE t_p53416936_auxchat_energy_messa.users SET is_banned = TRUE WHERE id = %s", (target_user_id,))
+        conn.commit()
+        result = {'message': 'User banned', 'success': True}
+        
+    elif action == 'unban':
+        cur.execute("UPDATE t_p53416936_auxchat_energy_messa.users SET is_banned = FALSE WHERE id = %s", (target_user_id,))
+        conn.commit()
+        result = {'message': 'User unbanned', 'success': True}
+        
+    elif action == 'delete':
+        cur.execute("DELETE FROM t_p53416936_auxchat_energy_messa.messages WHERE user_id = %s", (target_user_id,))
+        cur.execute("DELETE FROM t_p53416936_auxchat_energy_messa.message_reactions WHERE user_id = %s", (target_user_id,))
+        cur.execute("DELETE FROM t_p53416936_auxchat_energy_messa.users WHERE id = %s", (target_user_id,))
+        conn.commit()
+        result = {'message': 'User deleted', 'success': True}
         
     else:
         cur.close()

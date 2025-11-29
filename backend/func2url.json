@@ -1,4 +1,5 @@
 {
+  "add-reaction": "https://functions.poehali.dev/71ceb200-e467-4cf1-8f37-7d831ae549e7",
   "get-user": "https://functions.poehali.dev/518f730f-1a8e-45ad-b0ed-e9a66c5a3784",
   "create-user": "https://functions.poehali.dev/ce477ede-fb67-4de1-8f61-ad91d7ba3623",
   "admin-users": "https://functions.poehali.dev/c9561d6d-10c4-4b31-915e-07e239e7ae5f",

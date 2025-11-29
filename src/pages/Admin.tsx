@@ -76,31 +76,44 @@ export default function Admin() {
     navigate("/");
   };
 
-  const addEnergy = async (userId: number, amount: number) => {
+  const performAction = async (action: string, userId: number, amount?: number) => {
     if (!adminSecret) {
       alert("Войдите в систему");
       return;
     }
 
     try {
+      const body: any = {
+        admin_secret: adminSecret,
+        action: action,
+        target_user_id: userId,
+      };
+      
+      if (amount) {
+        body.amount = amount;
+      }
+
       const response = await fetch(
         "https://functions.poehali.dev/c9561d6d-10c4-4b31-915e-07e239e7ae5f",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            admin_secret: adminSecret,
-            action: "add_energy",
-            target_user_id: userId,
-            amount: amount,
-          }),
+          body: JSON.stringify(body),
         }
       );
 
       const data = await response.json();
       
       if (response.ok) {
-        alert(`Добавлено ${amount} энергии`);
+        if (action === "add_energy") {
+          alert(`Добавлено ${amount} энергии`);
+        } else if (action === "ban") {
+          alert("Пользователь заблокирован");
+        } else if (action === "unban") {
+          alert("Пользователь разблокирован");
+        } else if (action === "delete") {
+          alert("Пользователь удалён");
+        }
         loadUsers();
       } else {
         if (data.error === "Invalid admin secret") {
@@ -112,7 +125,7 @@ export default function Admin() {
         }
       }
     } catch (error) {
-      console.error("Error adding energy:", error);
+      console.error("Error performing action:", error);
       alert("Ошибка подключения");
     }
   };
@@ -201,11 +214,17 @@ export default function Admin() {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
                   <div className="flex items-center gap-2 bg-secondary/20 px-4 py-2 rounded-lg">
                     <Icon name="Zap" className="text-primary" size={20} />
                     <span className="font-semibold">{user.energy}</span>
                   </div>
+                  
+                  {user.is_banned && (
+                    <div className="bg-red-100 text-red-700 px-3 py-1 rounded text-sm font-medium">
+                      Заблокирован
+                    </div>
+                  )}
 
                   <Dialog>
                     <DialogTrigger asChild>
@@ -215,7 +234,7 @@ export default function Admin() {
                         onClick={() => setSelectedUserId(user.id)}
                       >
                         <Icon name="Plus" size={16} className="mr-2" />
-                        Добавить энергию
+                        Энергия
                       </Button>
                     </DialogTrigger>
                     <DialogContent>
@@ -264,7 +283,7 @@ export default function Admin() {
                         <Button
                           onClick={() => {
                             if (selectedUserId && energyAmount > 0) {
-                              addEnergy(selectedUserId, energyAmount);
+                              performAction("add_energy", selectedUserId, energyAmount);
                               setEnergyAmount(0);
                             }
                           }}
@@ -276,6 +295,39 @@ export default function Admin() {
                       </div>
                     </DialogContent>
                   </Dialog>
+                  
+                  {user.is_banned ? (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => performAction("unban", user.id)}
+                    >
+                      <Icon name="Check" size={16} className="mr-2" />
+                      Разблокировать
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => performAction("ban", user.id)}
+                    >
+                      <Icon name="Ban" size={16} className="mr-2" />
+                      Заблокировать
+                    </Button>
+                  )}
+                  
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => {
+                      if (confirm(`Удалить пользователя ${user.username}?`)) {
+                        performAction("delete", user.id);
+                      }
+                    }}
+                  >
+                    <Icon name="Trash2" size={16} className="mr-2" />
+                    Удалить
+                  </Button>
                 </div>
               </div>
             </Card>
