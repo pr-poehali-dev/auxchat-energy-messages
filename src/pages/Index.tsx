@@ -78,6 +78,7 @@ const Index = () => {
           }
         );
         const data = await response.json();
+        console.log("SMS response:", response.status, data);
         if (response.ok) {
           setStep("code");
           alert("SMS-код отправлен на ваш телефон!");
