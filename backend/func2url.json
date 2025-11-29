@@ -1,3 +1,5 @@
 {
+  "verify-sms": "https://functions.poehali.dev/c4359550-f604-4126-8e72-5087a670b7cb",
+  "send-sms": "https://functions.poehali.dev/39b076de-8be1-48c0-8684-f94df4548b91",
   "telegram-auth": "https://functions.poehali.dev/1010306b-8aa0-4c54-828b-5427008a0172"
 }

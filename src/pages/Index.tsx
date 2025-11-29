@@ -66,16 +66,52 @@ const Index = () => {
 
   const reactionEmojis = ["❤️", "👍", "🔥", "🎉", "😂", "😍"];
 
-  const handlePhoneSubmit = () => {
+  const handlePhoneSubmit = async () => {
     if (phone.length >= 10) {
-      setStep("code");
-      alert("SMS-код отправлен на ваш телефон!");
+      try {
+        const response = await fetch(
+          "https://functions.poehali.dev/39b076de-8be1-48c0-8684-f94df4548b91",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ phone }),
+          }
+        );
+        const data = await response.json();
+        if (response.ok) {
+          setStep("code");
+          alert("SMS-код отправлен на ваш телефон!");
+        } else {
+          alert("Ошибка: " + (data.error || "Не удалось отправить SMS"));
+        }
+      } catch (error) {
+        console.error("SMS send error:", error);
+        alert("Ошибка подключения");
+      }
     }
   };
 
-  const handleCodeSubmit = () => {
+  const handleCodeSubmit = async () => {
     if (smsCode.length === 4) {
-      setStep("profile");
+      try {
+        const response = await fetch(
+          "https://functions.poehali.dev/c4359550-f604-4126-8e72-5087a670b7cb",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ phone, code: smsCode }),
+          }
+        );
+        const data = await response.json();
+        if (response.ok) {
+          setStep("profile");
+        } else {
+          alert("Неверный код: " + (data.error || "Попробуйте еще раз"));
+        }
+      } catch (error) {
+        console.error("Code verify error:", error);
+        alert("Ошибка подключения");
+      }
     }
   };
 
