@@ -1,0 +1,26 @@
+{
+  "tests": [
+    {
+      "name": "OPTIONS request for CORS",
+      "method": "OPTIONS",
+      "path": "/",
+      "expectedStatus": 200
+    },
+    {
+      "name": "Create user",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "phone": "+79991234567",
+        "username": "TestUser",
+        "avatar": ""
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "id": "number",
+        "username": "string"
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}

@@ -1,4 +1,9 @@
 {
+  "get-user": "https://functions.poehali.dev/518f730f-1a8e-45ad-b0ed-e9a66c5a3784",
+  "create-user": "https://functions.poehali.dev/ce477ede-fb67-4de1-8f61-ad91d7ba3623",
+  "admin-users": "https://functions.poehali.dev/c9561d6d-10c4-4b31-915e-07e239e7ae5f",
+  "get-messages": "https://functions.poehali.dev/392f3078-9f28-4640-ab86-dcabecaf721a",
+  "send-message": "https://functions.poehali.dev/8d34c54f-b2de-42c1-ac0c-9f6ecf5e16f6",
   "verify-sms": "https://functions.poehali.dev/c4359550-f604-4126-8e72-5087a670b7cb",
   "send-sms": "https://functions.poehali.dev/39b076de-8be1-48c0-8684-f94df4548b91",
   "telegram-auth": "https://functions.poehali.dev/1010306b-8aa0-4c54-828b-5427008a0172"

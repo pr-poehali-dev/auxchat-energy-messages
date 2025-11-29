@@ -95,13 +95,21 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     
     # Помечаем код как использованный
     cur.execute("UPDATE sms_codes SET verified = TRUE WHERE id = %s", (code_id,))
-    conn.commit()
     
+    # Проверяем, есть ли пользователь с таким телефоном
+    cur.execute("SELECT id FROM t_p53416936_auxchat_energy_messa.users WHERE phone = %s", (phone,))
+    user_row = cur.fetchone()
+    
+    user_id = None
+    if user_row:
+        user_id = user_row[0]
+    
+    conn.commit()
     cur.close()
     conn.close()
     
     return {
         'statusCode': 200,
         'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-        'body': json.dumps({'success': True, 'phone': phone})
+        'body': json.dumps({'success': True, 'phone': phone, 'user_id': user_id, 'is_new': user_id is None})
     }

@@ -1,0 +1,25 @@
+{
+  "tests": [
+    {
+      "name": "OPTIONS request for CORS",
+      "method": "OPTIONS",
+      "path": "/",
+      "expectedStatus": 200
+    },
+    {
+      "name": "Send message",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "user_id": 1,
+        "text": "Test message"
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "id": "number",
+        "text": "string"
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}
