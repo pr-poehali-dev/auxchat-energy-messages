@@ -563,22 +563,9 @@ const Index = () => {
                   botUsername="auxchat_web_login_bot"
                   onAuth={handleTelegramAuth}
                 />
-                <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                  <p className="text-sm font-semibold text-yellow-800 mb-2">
-                    ⚠️ Требуется обновить токен бота
-                  </p>
-                  <p className="text-xs text-yellow-700 mb-3">
-                    Добавьте новый TELEGRAM_BOT_TOKEN в секреты проекта для бота <strong>@auxchat_web_login_bot</strong>
-                  </p>
-                  <a 
-                    href="https://poehali.dev/secrets" 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="inline-block px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white text-sm font-medium rounded-md transition-colors"
-                  >
-                    Открыть секреты проекта →
-                  </a>
-                </div>
+                <p className="text-xs text-muted-foreground mt-4">
+                  Нажмите кнопку выше для входа через Telegram
+                </p>
               </div>
             </TabsContent>
           </Tabs>
