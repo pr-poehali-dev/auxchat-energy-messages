@@ -34,11 +34,20 @@ export default function Chat() {
   const [currentUserProfile, setCurrentUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const prevMessageCountRef = useRef<number>(0);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const currentUserId = localStorage.getItem('auxchat_user_id');
   const currentUsername = localStorage.getItem('username') || 'Я';
 
   useEffect(() => {
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+  }, []);
+
+  useEffect(() => {
+    audioRef.current = new Audio('https://cdn.poehali.dev/intertnal/sounds/notification.mp3');
     loadProfile();
     loadCurrentUserProfile();
     loadMessages();
@@ -48,6 +57,28 @@ export default function Chat() {
 
   useEffect(() => {
     scrollToBottom();
+    
+    if (prevMessageCountRef.current > 0 && messages.length > prevMessageCountRef.current) {
+      const newMessages = messages.slice(prevMessageCountRef.current);
+      const hasNewMessageFromOther = newMessages.some(
+        msg => String(msg.senderId) !== String(currentUserId)
+      );
+      
+      if (hasNewMessageFromOther) {
+        audioRef.current?.play().catch(err => console.log('Audio play failed:', err));
+        
+        if ('Notification' in window && Notification.permission === 'granted') {
+          const lastMsg = newMessages[newMessages.length - 1];
+          new Notification(`${lastMsg.sender.username}`, {
+            body: lastMsg.text,
+            icon: lastMsg.sender.avatarUrl || '/favicon.svg',
+            tag: 'auxchat-message'
+          });
+        }
+      }
+    }
+    
+    prevMessageCountRef.current = messages.length;
   }, [messages]);
 
   const scrollToBottom = () => {
