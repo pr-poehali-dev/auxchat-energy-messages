@@ -59,6 +59,7 @@ const Index = () => {
   const [viewerOpen, setViewerOpen] = useState(false);
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
   const photoFileInputRef = useRef<HTMLInputElement>(null);
+  const [displayLimit, setDisplayLimit] = useState(10);
 
   const reactionEmojis = ["❤️", "👍", "🔥", "🎉", "😂", "😍"];
 
@@ -1013,10 +1014,22 @@ const Index = () => {
         </div>
       </header>
 
-      <main className="flex-1 container mx-auto max-w-4xl p-4 flex flex-col">
-        <Card className="flex-1 flex flex-col overflow-hidden shadow-lg">
+      <main className="flex-1 container mx-auto max-w-4xl p-4 flex flex-col overflow-hidden">
+        <Card className="flex-1 flex flex-col shadow-lg">
           <div className="flex-1 overflow-y-auto p-4 space-y-4">
-            {messages.map((msg) => (
+            {messages.length > displayLimit && (
+              <div className="text-center">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setDisplayLimit(displayLimit + 10)}
+                >
+                  <Icon name="ChevronUp" size={16} className="mr-2" />
+                  Показать ещё 10 сообщений
+                </Button>
+              </div>
+            )}
+            {messages.slice(-displayLimit).map((msg) => (
               <div key={msg.id} className="flex gap-3">
                 <button onClick={() => navigate(`/profile/${msg.userId}`)}>
                   <Avatar className="cursor-pointer hover:ring-2 hover:ring-purple-500 transition-all">
@@ -1077,7 +1090,7 @@ const Index = () => {
             ))}
           </div>
           
-          <div className="p-4 border-t bg-white">
+          <div className="p-4 border-t bg-white flex-shrink-0">
             <div className="flex gap-2">
               <Input
                 placeholder={user ? "Напишите сообщение..." : "Войдите для отправки"}
