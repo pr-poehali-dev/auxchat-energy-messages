@@ -63,8 +63,28 @@ const Index = () => {
     return window.innerWidth >= 768 ? 7 : 6;
   });
   const initialLimit = window.innerWidth >= 768 ? 7 : 6;
+  const [unreadCount, setUnreadCount] = useState(0);
 
   const reactionEmojis = ["❤️", "👍", "🔥", "🎉", "😂", "😍"];
+
+  const loadUnreadCount = async () => {
+    if (!userId) return;
+    try {
+      const response = await fetch(
+        'https://functions.poehali.dev/aea3125a-7d11-4637-af71-0998dfbaf5b2',
+        {
+          headers: {
+            'X-User-Id': userId.toString()
+          }
+        }
+      );
+      const data = await response.json();
+      const total = (data.conversations || []).reduce((sum: number, conv: any) => sum + (conv.unreadCount || 0), 0);
+      setUnreadCount(total);
+    } catch (error) {
+      console.error('Error loading unread count:', error);
+    }
+  };
 
   const loadMessages = async (retryCount = 0) => {
     try {
@@ -145,13 +165,19 @@ const Index = () => {
     if (userId) {
       loadProfilePhotos();
     }
-    const interval = setInterval(loadMessages, 5000);
+    const interval = setInterval(() => {
+      loadMessages();
+      if (userId) {
+        loadUnreadCount();
+      }
+    }, 5000);
     return () => clearInterval(interval);
-  }, []);
+  }, [userId]);
 
   useEffect(() => {
     if (userId) {
       loadUser(userId);
+      loadUnreadCount();
     }
   }, [userId]);
 
@@ -716,6 +742,11 @@ const Index = () => {
                 className="relative h-8 w-8 p-0"
               >
                 <Icon name="MessageCircle" size={18} />
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </span>
+                )}
               </Button>
               <div className="flex items-center gap-1">
                 <Icon name="Zap" className="text-yellow-500" size={16} />

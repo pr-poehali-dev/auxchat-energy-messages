@@ -47,7 +47,9 @@ export default function Chat() {
   }, []);
 
   useEffect(() => {
-    audioRef.current = new Audio('https://cdn.poehali.dev/intertnal/sounds/notification.mp3');
+    const audio = new Audio();
+    audio.src = 'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYJGGS77+OSUxQSWLPn77FwJAYzbM7x0H0uBiaI1/LPfzQHIXjH8N2PQBAQW7Pi77BxJAYzbM/y0H0vByKE0vLRgjMGIHfC7+CRSwwQVrHi7rRxJAYzbM/y0H0vBiKD0vLRgjMGIHfC7+CQSwwQV7Hh7rVwJAYzbM/y0H0vBiKD0vLRgjMGIHfC7+CQSwwQV7Hh7rVwJAYzbM/y0H0vBiKD0vLRgjMGIHfC7+CQSwwQV7Hh7rVwJAYzbM/y0H0vBiKD0vLRgjMGIHfC7+CQSwwQV7Hh7rVwJAYzbM/y0H0vBiKD0vLRgjMGIHfC7+CQSwwQV7Hh7rVwJAYzbM/y0H0vBiKD0vLRgjMGIHfC7+CQSwwQV7Hh7rVwJAYzbM/y0H0vBiKD0vLRgjMGIHfC7+CQSwwQV7Hh7rVwJAYzbM/y0H0vBiKD0vLRgjMGIHfC7+CQSwwQV7Hh7rVwJAYzbM/y0H0vBiKD0vLRgjMGIHfC7+CQSwwQV7Hh7rVwJAYzbM/y0H0vBiKD0vLRgjMGIHfC7+CQSwwQV7Hh7rVwJAYzbM/y0H0vBiKD0vLRgjMGIHfC7+CQSwwQV7Hh7rVwJAYzbM/y0H0vBiKD0vLRgjMGIHfC7+CQSwwQV7Hh7rVwJAYzbM/y0H0vBiKD0vLRgjMGIHfC7+CQSwwQV7Hh7rVwJAYzbM/y0H0vBiKD0vLRgjMGIHfC7+CQSwwQV7Hh7rVwJAYzbM/y0H0vBiKD0vLRgjMGIHfC7+CQSwwQV7Hh7rVw==';
+    audioRef.current = audio;
     loadProfile();
     loadCurrentUserProfile();
     loadMessages();
