@@ -85,15 +85,23 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             
             messages = []
             for row in rows:
+                created_at = row[5]
+                if hasattr(created_at, 'isoformat'):
+                    created_at_str = created_at.isoformat()
+                else:
+                    created_at_str = str(created_at)
+                
                 messages.append({
                     'id': row[0],
                     'senderId': row[1],
                     'receiverId': row[2],
                     'text': row[3],
                     'isRead': row[4],
-                    'createdAt': str(row[5]),
-                    'sender': {'username': row[6], 'avatarUrl': row[7]}
+                    'createdAt': created_at_str,
+                    'sender': {'username': row[6] if row[6] else '', 'avatarUrl': row[7] if row[7] else None}
                 })
+            
+            print(f'Prepared {len(messages)} messages for response')
             
             update_query = f"""
                 UPDATE t_p53416936_auxchat_energy_messa.private_messages 

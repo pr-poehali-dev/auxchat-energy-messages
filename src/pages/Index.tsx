@@ -35,6 +35,16 @@ const Index = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(null);
   const [userId, setUserId] = useState<number | null>(() => {
+    // Force clear old data and set to user 7
+    const appVersion = localStorage.getItem('app_version');
+    if (appVersion !== 'v2') {
+      localStorage.clear();
+      localStorage.setItem('app_version', 'v2');
+      localStorage.setItem('auxchat_user_id', '7');
+      localStorage.setItem('username', 'AuxChat');
+      return 7;
+    }
+    
     const stored = localStorage.getItem('auxchat_user_id');
     if (stored) return parseInt(stored);
     
