@@ -325,7 +325,7 @@ const Index = () => {
     if (messageText.trim()) {
       try {
         const response = await fetch(
-          "https://functions.poehali.dev/f98950dc-a5dc-45f3-bda3-ce9f2ad77f44",
+          "https://functions.poehali.dev/8d34c54f-b2de-42c1-ac0c-9f6ecf5e16f6",
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },

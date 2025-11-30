@@ -74,9 +74,9 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         cur.close()
         conn.close()
         return {
-            'statusCode': 400,
+            'statusCode': 402,
             'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-            'body': json.dumps({'error': 'Not enough energy'})
+            'body': json.dumps({'error': 'Недостаточно энергии для отправки сообщения'})
         }
     
     cur.execute("UPDATE t_p53416936_auxchat_energy_messa.users SET energy = energy - 10 WHERE id = %s", (user_id,))
@@ -99,6 +99,6 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             'user_id': user_id,
             'text': text,
             'created_at': created_at.isoformat(),
-            'new_energy': energy - 10
+            'energy': energy - 10
         })
     }
