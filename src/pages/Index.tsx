@@ -1095,7 +1095,7 @@ const Index = () => {
               </div>
             )}
             {messages.slice(-displayLimit).map((msg) => (
-              <div key={msg.id} className="flex gap-2">
+              <div key={msg.id} className="flex gap-2 p-3 rounded-lg bg-white/60 hover:bg-white/80 transition-colors shadow-sm hover:shadow-md">
                 <button onClick={() => navigate(`/profile/${msg.userId}`)}>
                   <Avatar className="cursor-pointer hover:ring-2 hover:ring-purple-500 transition-all h-8 w-8 md:h-10 md:w-10">
                     <AvatarImage src={msg.avatar} alt={msg.username} />
