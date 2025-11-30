@@ -32,7 +32,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         }
     
     params = event.get('queryStringParameters') or {}
-    limit = int(params.get('limit', 5))
+    limit = int(params.get('limit', 20))
     offset = int(params.get('offset', 0))
     
     dsn = os.environ.get('DATABASE_URL')
@@ -42,7 +42,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     cur.execute(f"""
         SELECT 
             m.id, m.text, m.created_at,
-            u.id, u.username, u.avatar_url
+            u.id, u.username
         FROM t_p53416936_auxchat_energy_messa.messages m
         JOIN t_p53416936_auxchat_energy_messa.users u ON m.user_id = u.id
         ORDER BY m.created_at DESC
@@ -53,7 +53,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     messages = []
     
     for row in rows:
-        msg_id, text, created_at, user_id, username, avatar_url = row
+        msg_id, text, created_at, user_id, username = row
         
         cur.execute(f"""
             SELECT emoji, COUNT(*) as count
@@ -64,13 +64,6 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         
         reactions = [{'emoji': r[0], 'count': r[1]} for r in cur.fetchall()]
         
-        if avatar_url and avatar_url.startswith('http'):
-            avatar = avatar_url
-        elif avatar_url and avatar_url.startswith('data:image'):
-            avatar = avatar_url
-        else:
-            avatar = f'https://api.dicebear.com/7.x/avataaars/svg?seed={username}'
-        
         messages.append({
             'id': msg_id,
             'text': text,
@@ -78,7 +71,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             'user': {
                 'id': user_id,
                 'username': username,
-                'avatar': avatar
+                'avatar': f'https://api.dicebear.com/7.x/avataaars/svg?seed={username}'
             },
             'reactions': reactions
         })

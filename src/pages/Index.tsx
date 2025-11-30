@@ -69,7 +69,7 @@ const Index = () => {
   const loadMessages = async () => {
     try {
       const response = await fetch(
-        "https://functions.poehali.dev/392f3078-9f28-4640-ab86-dcabecaf721a?limit=5&offset=0"
+        "https://functions.poehali.dev/392f3078-9f28-4640-ab86-dcabecaf721a?limit=20&offset=0"
       );
       const data = await response.json();
       if (response.ok && data.messages) {

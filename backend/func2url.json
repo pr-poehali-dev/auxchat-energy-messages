@@ -1,4 +1,5 @@
 {
+  "get-avatar": "https://functions.poehali.dev/562101c8-623d-4f36-9921-b90b18b6a0b2",
   "profile-photos": "https://functions.poehali.dev/6ab5e5ca-f93c-438c-bc46-7eb7a75e2734",
   "get-conversations": "https://functions.poehali.dev/aea3125a-7d11-4637-af71-0998dfbaf5b2",
   "private-messages": "https://functions.poehali.dev/0222e582-5c06-4780-85fa-c9145e5bba14",
@@ -16,6 +17,5 @@
   "get-messages": "https://functions.poehali.dev/392f3078-9f28-4640-ab86-dcabecaf721a",
   "send-message": "https://functions.poehali.dev/8d34c54f-b2de-42c1-ac0c-9f6ecf5e16f6",
   "verify-sms": "https://functions.poehali.dev/c4359550-f604-4126-8e72-5087a670b7cb",
-  "send-sms": "https://functions.poehali.dev/39b076de-8be1-48c0-8684-f94df4548b91",
-  "telegram-auth": "https://functions.poehali.dev/1010306b-8aa0-4c54-828b-5427008a0172"
+  "send-sms": "https://functions.poehali.dev/39b076de-8be1-48c0-8684-f94df4548b91"
 }
