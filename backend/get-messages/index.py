@@ -71,7 +71,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             'user': {
                 'id': user_id,
                 'username': username,
-                'avatar': ''
+                'avatar': f'https://api.dicebear.com/7.x/avataaars/svg?seed={username}'
             },
             'reactions': reactions
         })
