@@ -293,10 +293,7 @@ export default function Profile() {
 
           <div className="border-t border-border pt-4 md:pt-6">
             <div className="flex items-center justify-between mb-3">
-              <h2 className="text-lg md:text-xl font-semibold">Фотографии</h2>
-              {isOwnProfile && photos.length < 6 && (
-                <span className="text-sm text-muted-foreground">{photos.length}/6</span>
-              )}
+              <h2 className="text-lg md:text-xl font-semibold">Фотографии ({photos.length}/6)</h2>
             </div>
 
             {isOwnProfile && photos.length < 6 && (
@@ -312,17 +309,17 @@ export default function Profile() {
                   <Button 
                     asChild
                     disabled={uploadingFile}
-                    className="w-full bg-gradient-to-r from-purple-500 to-pink-500"
+                    className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:opacity-90"
                   >
-                    <span className="cursor-pointer">
+                    <span className="cursor-pointer flex items-center justify-center">
                       {uploadingFile ? (
                         <>
-                          <Icon name="Loader2" size={16} className="mr-2 animate-spin" />
+                          <Icon name="Loader2" size={20} className="mr-2 animate-spin" />
                           Загрузка...
                         </>
                       ) : (
                         <>
-                          <Icon name="Upload" size={16} className="mr-2" />
+                          <Icon name="Upload" size={20} className="mr-2" />
                           Загрузить фото
                         </>
                       )}
