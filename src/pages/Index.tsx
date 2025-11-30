@@ -419,7 +419,12 @@ const Index = () => {
   };
 
   const handleAddEnergy = async (amount: number) => {
-    if (!userId || !user) return;
+    if (!userId || !user) {
+      console.log("No user or userId");
+      return;
+    }
+
+    console.log("Creating payment for amount:", amount);
 
     try {
       const response = await fetch(
@@ -434,14 +439,22 @@ const Index = () => {
         }
       );
 
+      console.log("Payment response:", response.status);
+
       if (response.ok) {
         const data = await response.json();
+        console.log("Payment data:", data);
         if (data.payment_url) {
           window.location.href = data.payment_url;
         }
+      } else {
+        const error = await response.json();
+        console.error("Payment failed:", error);
+        alert("Ошибка создания платежа: " + (error.error || "Неизвестная ошибка"));
       }
     } catch (error) {
       console.error("Payment error:", error);
+      alert("Ошибка соединения с сервером оплаты");
     }
   };
 
