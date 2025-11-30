@@ -114,9 +114,20 @@ const Index = () => {
       );
       const data = await response.json();
       if (response.ok) {
+        const photosResponse = await fetch(
+          `https://functions.poehali.dev/6ab5e5ca-f93c-438c-bc46-7eb7a75e2734?userId=${id}`,
+          {
+            headers: { 'X-User-Id': id.toString() }
+          }
+        );
+        const photosData = await photosResponse.json();
+        const userAvatar = photosData.photos && photosData.photos.length > 0 
+          ? photosData.photos[0].url 
+          : `https://api.dicebear.com/7.x/avataaars/svg?seed=${data.username}`;
+        
         setUser({
           username: data.username,
-          avatar: data.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${data.username}`,
+          avatar: userAvatar,
           phone: data.phone,
           energy: data.energy,
         });

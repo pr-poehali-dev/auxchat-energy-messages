@@ -64,6 +64,17 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         
         reactions = [{'emoji': r[0], 'count': r[1]} for r in cur.fetchall()]
         
+        cur.execute(f"""
+            SELECT photo_url
+            FROM t_p53416936_auxchat_energy_messa.user_photos
+            WHERE user_id = {user_id}
+            ORDER BY display_order ASC, created_at DESC
+            LIMIT 1
+        """)
+        
+        photo_row = cur.fetchone()
+        user_avatar = photo_row[0] if photo_row else f'https://api.dicebear.com/7.x/avataaars/svg?seed={username}'
+        
         messages.append({
             'id': msg_id,
             'text': text,
@@ -71,7 +82,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             'user': {
                 'id': user_id,
                 'username': username,
-                'avatar': f'https://api.dicebear.com/7.x/avataaars/svg?seed={username}'
+                'avatar': user_avatar
             },
             'reactions': reactions
         })
