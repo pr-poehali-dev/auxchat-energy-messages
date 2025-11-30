@@ -21,118 +21,134 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 'Access-Control-Allow-Headers': 'Content-Type, X-User-Id',
                 'Access-Control-Max-Age': '86400'
             },
-            'body': ''
+            'body': '',
+            'isBase64Encoded': False
         }
     
-    headers = event.get('headers', {})
-    user_id_str = headers.get('X-User-Id') or headers.get('x-user-id')
-    
-    if not user_id_str:
-        return {
-            'statusCode': 401,
-            'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-            'body': json.dumps({'error': 'X-User-Id header required'})
-        }
-    
-    user_id = int(user_id_str)
-    dsn = os.environ.get('DATABASE_URL')
-    
-    conn = psycopg2.connect(dsn)
-    cur = conn.cursor()
-    
-    if method == 'GET':
-        query_params = event.get('queryStringParameters', {})
-        other_user_id_str = query_params.get('otherUserId')
+    try:
+        headers = event.get('headers', {})
+        user_id_str = headers.get('X-User-Id') or headers.get('x-user-id')
         
-        if not other_user_id_str:
+        if not user_id_str:
+            return {
+                'statusCode': 401,
+                'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                'body': json.dumps({'error': 'X-User-Id header required'}),
+                'isBase64Encoded': False
+            }
+        
+        user_id = int(user_id_str)
+        dsn = os.environ.get('DATABASE_URL')
+        
+        conn = psycopg2.connect(dsn)
+        cur = conn.cursor()
+        
+        if method == 'GET':
+            query_params = event.get('queryStringParameters', {}) or {}
+            other_user_id_str = query_params.get('otherUserId')
+            
+            if not other_user_id_str:
+                cur.close()
+                conn.close()
+                return {
+                    'statusCode': 400,
+                    'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                    'body': json.dumps({'error': 'otherUserId query param required'}),
+                    'isBase64Encoded': False
+                }
+            
+            other_user_id = int(other_user_id_str)
+            
+            cur.execute("""
+                SELECT pm.id, pm.sender_id, pm.receiver_id, pm.text, pm.is_read, pm.created_at,
+                       u.username, u.avatar_url
+                FROM t_p53416936_auxchat_energy_messa.private_messages pm
+                JOIN t_p53416936_auxchat_energy_messa.users u ON u.id = pm.sender_id
+                WHERE (pm.sender_id = %s AND pm.receiver_id = %s) 
+                   OR (pm.sender_id = %s AND pm.receiver_id = %s)
+                ORDER BY pm.created_at ASC
+                LIMIT 100
+            """, (user_id, other_user_id, other_user_id, user_id))
+            
+            rows = cur.fetchall()
+            
+            messages = [
+                {
+                    'id': row[0],
+                    'senderId': row[1],
+                    'receiverId': row[2],
+                    'text': row[3],
+                    'isRead': row[4],
+                    'createdAt': row[5].isoformat(),
+                    'sender': {'username': row[6], 'avatarUrl': row[7]}
+                }
+                for row in rows
+            ]
+            
+            cur.execute("""
+                UPDATE t_p53416936_auxchat_energy_messa.private_messages 
+                SET is_read = TRUE 
+                WHERE receiver_id = %s AND sender_id = %s AND is_read = FALSE
+            """, (user_id, other_user_id))
+            conn.commit()
+            
             cur.close()
             conn.close()
+            
             return {
-                'statusCode': 400,
+                'statusCode': 200,
                 'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-                'body': json.dumps({'error': 'otherUserId query param required'})
+                'body': json.dumps({'messages': messages}),
+                'isBase64Encoded': False
             }
         
-        other_user_id = int(other_user_id_str)
-        
-        cur.execute("""
-            SELECT pm.id, pm.sender_id, pm.receiver_id, pm.text, pm.is_read, pm.created_at,
-                   u.username, u.avatar_url
-            FROM t_p53416936_auxchat_energy_messa.private_messages pm
-            JOIN t_p53416936_auxchat_energy_messa.users u ON u.id = pm.sender_id
-            WHERE (pm.sender_id = %s AND pm.receiver_id = %s) 
-               OR (pm.sender_id = %s AND pm.receiver_id = %s)
-            ORDER BY pm.created_at ASC
-            LIMIT 100
-        """, (user_id, other_user_id, other_user_id, user_id))
-        
-        rows = cur.fetchall()
-        
-        messages = [
-            {
-                'id': row[0],
-                'senderId': row[1],
-                'receiverId': row[2],
-                'text': row[3],
-                'isRead': row[4],
-                'createdAt': row[5].isoformat(),
-                'sender': {'username': row[6], 'avatarUrl': row[7]}
+        if method == 'POST':
+            body_data = json.loads(event.get('body', '{}'))
+            receiver_id = body_data.get('receiverId')
+            text = body_data.get('text', '').strip()
+            
+            if not receiver_id or not text:
+                cur.close()
+                conn.close()
+                return {
+                    'statusCode': 400,
+                    'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                    'body': json.dumps({'error': 'receiverId and text required'}),
+                    'isBase64Encoded': False
+                }
+            
+            cur.execute("""
+                INSERT INTO t_p53416936_auxchat_energy_messa.private_messages 
+                (sender_id, receiver_id, text) 
+                VALUES (%s, %s, %s) 
+                RETURNING id
+            """, (user_id, receiver_id, text))
+            
+            message_id = cur.fetchone()[0]
+            conn.commit()
+            cur.close()
+            conn.close()
+            
+            return {
+                'statusCode': 200,
+                'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                'body': json.dumps({'success': True, 'messageId': message_id}),
+                'isBase64Encoded': False
             }
-            for row in rows
-        ]
-        
-        cur.execute("""
-            UPDATE t_p53416936_auxchat_energy_messa.private_messages 
-            SET is_read = TRUE 
-            WHERE receiver_id = %s AND sender_id = %s AND is_read = FALSE
-        """, (user_id, other_user_id))
-        conn.commit()
         
         cur.close()
         conn.close()
-        
         return {
-            'statusCode': 200,
+            'statusCode': 405,
             'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-            'body': json.dumps({'messages': messages})
+            'body': json.dumps({'error': 'Method not allowed'}),
+            'isBase64Encoded': False
         }
-    
-    if method == 'POST':
-        body_data = json.loads(event.get('body', '{}'))
-        receiver_id = body_data.get('receiverId')
-        text = body_data.get('text', '').strip()
-        
-        if not receiver_id or not text:
-            cur.close()
-            conn.close()
-            return {
-                'statusCode': 400,
-                'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-                'body': json.dumps({'error': 'receiverId and text required'})
-            }
-        
-        cur.execute("""
-            INSERT INTO t_p53416936_auxchat_energy_messa.private_messages 
-            (sender_id, receiver_id, text) 
-            VALUES (%s, %s, %s) 
-            RETURNING id
-        """, (user_id, receiver_id, text))
-        
-        message_id = cur.fetchone()[0]
-        conn.commit()
-        cur.close()
-        conn.close()
-        
+    except Exception as e:
+        print(f'Error in private-messages: {e}')
         return {
-            'statusCode': 200,
+            'statusCode': 500,
             'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-            'body': json.dumps({'success': True, 'messageId': message_id})
+            'body': json.dumps({'error': str(e)}),
+            'isBase64Encoded': False
         }
-    
-    cur.close()
-    conn.close()
-    return {
-        'statusCode': 405,
-        'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-        'body': json.dumps({'error': 'Method not allowed'})
-    }
