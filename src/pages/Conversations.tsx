@@ -1,0 +1,142 @@
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import Icon from '@/components/ui/icon';
+import { toast } from 'sonner';
+
+interface Conversation {
+  userId: number;
+  username: string;
+  avatarUrl: string | null;
+  status: string;
+  lastMessage: string;
+  lastMessageAt: string;
+  unreadCount: number;
+}
+
+export default function Conversations() {
+  const navigate = useNavigate();
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const currentUserId = localStorage.getItem('userId');
+
+  useEffect(() => {
+    if (!currentUserId) {
+      navigate('/');
+      return;
+    }
+    loadConversations();
+    const interval = setInterval(loadConversations, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const loadConversations = async () => {
+    try {
+      const response = await fetch(
+        'https://functions.poehali.dev/aea3125a-7d11-4637-af71-0998dfbaf5b2',
+        {
+          headers: {
+            'X-User-Id': currentUserId || '0'
+          }
+        }
+      );
+      const data = await response.json();
+      setConversations(data.conversations || []);
+    } catch (error) {
+      console.error('Error loading conversations:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const openChat = (userId: number) => {
+    navigate(`/chat/${userId}`);
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-spin">
+          <Icon name="Loader2" size={32} />
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-background via-purple-950/20 to-background">
+      <div className="container mx-auto px-4 py-8 max-w-4xl">
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-2xl font-bold">Сообщения</h1>
+          <Button
+            variant="ghost"
+            onClick={() => navigate('/')}
+          >
+            <Icon name="ArrowLeft" size={20} className="mr-2" />
+            Назад в чат
+          </Button>
+        </div>
+
+        {conversations.length === 0 ? (
+          <Card className="p-8 text-center bg-card/90 backdrop-blur border-purple-500/20">
+            <Icon name="MessageCircle" size={48} className="mx-auto mb-4 text-muted-foreground" />
+            <p className="text-muted-foreground">
+              У вас пока нет личных сообщений.
+              <br />
+              Начните диалог, перейдя в профиль пользователя.
+            </p>
+          </Card>
+        ) : (
+          <div className="space-y-2">
+            {conversations.map((conv) => (
+              <Card
+                key={conv.userId}
+                className="p-4 bg-card/90 backdrop-blur border-purple-500/20 hover:bg-accent/50 transition-colors cursor-pointer"
+                onClick={() => openChat(conv.userId)}
+              >
+                <div className="flex items-center gap-4">
+                  <div className="w-14 h-14 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white text-xl font-bold flex-shrink-0 relative">
+                    {conv.avatarUrl ? (
+                      <img src={conv.avatarUrl} alt={conv.username} className="w-full h-full rounded-full object-cover" />
+                    ) : (
+                      conv.username[0]?.toUpperCase()
+                    )}
+                    {conv.status === 'online' && (
+                      <span className="absolute bottom-0 right-0 w-4 h-4 bg-green-500 rounded-full border-2 border-background"></span>
+                    )}
+                  </div>
+
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between mb-1">
+                      <h3 className="font-semibold truncate">{conv.username}</h3>
+                      <span className="text-xs text-muted-foreground">
+                        {new Date(conv.lastMessageAt).toLocaleTimeString('ru-RU', {
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm text-muted-foreground truncate flex-1">
+                        {conv.lastMessage}
+                      </p>
+                      {conv.unreadCount > 0 && (
+                        <span className="ml-2 px-2 py-1 bg-purple-500 text-white text-xs rounded-full">
+                          {conv.unreadCount}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  <Icon name="ChevronRight" size={20} className="text-muted-foreground flex-shrink-0" />
+                </div>
+              </Card>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

@@ -1,4 +1,7 @@
 {
+  "profile-photos": "https://functions.poehali.dev/6ab5e5ca-f93c-438c-bc46-7eb7a75e2734",
+  "get-conversations": "https://functions.poehali.dev/aea3125a-7d11-4637-af71-0998dfbaf5b2",
+  "private-messages": "https://functions.poehali.dev/0222e582-5c06-4780-85fa-c9145e5bba14",
   "payment-webhook": "https://functions.poehali.dev/39c159dc-cf4b-4d2e-8919-591b5583cb96",
   "create-payment": "https://functions.poehali.dev/f92685aa-bd08-4a3c-9170-4d421a00058c",
   "update-avatar": "https://functions.poehali.dev/7ad164df-b661-49f1-882d-10407afaa9d8",

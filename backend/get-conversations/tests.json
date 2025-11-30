@@ -1,0 +1,23 @@
+{
+  "tests": [
+    {
+      "name": "OPTIONS request for CORS",
+      "method": "OPTIONS",
+      "path": "/",
+      "expectedStatus": 200
+    },
+    {
+      "name": "Get user conversations",
+      "method": "GET",
+      "path": "/",
+      "headers": {
+        "X-User-Id": "1"
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "conversations": "array"
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}

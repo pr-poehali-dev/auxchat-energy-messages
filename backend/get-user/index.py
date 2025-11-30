@@ -46,7 +46,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     cur = conn.cursor()
     
     cur.execute(
-        "SELECT id, phone, username, avatar_url, energy, is_banned FROM t_p53416936_auxchat_energy_messa.users WHERE id = %s",
+        "SELECT id, phone, username, avatar_url, energy, is_banned, bio, status FROM t_p53416936_auxchat_energy_messa.users WHERE id = %s",
         (user_id,)
     )
     row = cur.fetchone()
@@ -71,6 +71,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             'avatar': row[3] if row[3] else '',
             'energy': row[4],
             'is_admin': False,
-            'is_banned': row[5] if len(row) > 5 and row[5] is not None else False
+            'is_banned': row[5] if row[5] is not None else False,
+            'bio': row[6] if row[6] else '',
+            'status': row[7] if row[7] else 'online'
         })
     }

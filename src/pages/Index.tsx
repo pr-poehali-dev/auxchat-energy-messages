@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -15,6 +16,7 @@ import Icon from "@/components/ui/icon";
 
 interface Message {
   id: number;
+  userId: number;
   username: string;
   avatar: string;
   text: string;
@@ -30,6 +32,7 @@ interface User {
 }
 
 const Index = () => {
+  const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(null);
   const [userId, setUserId] = useState<number | null>(() => {
     const stored = localStorage.getItem('auxchat_user_id');
@@ -61,6 +64,7 @@ const Index = () => {
       if (response.ok && data.messages) {
         const formattedMessages: Message[] = data.messages.map((msg: any) => ({
           id: msg.id,
+          userId: msg.user.id,
           username: msg.user.username,
           avatar: msg.user.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${msg.user.username}`,
           text: msg.text,
@@ -468,6 +472,14 @@ const Index = () => {
         <div className="flex items-center gap-2">
           {user ? (
             <>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate('/messages')}
+                className="relative"
+              >
+                <Icon name="MessageCircle" size={20} />
+              </Button>
               <div className="flex items-center gap-2 mr-2">
                 <Icon name="Zap" className="text-yellow-500" size={20} />
                 <span className="font-semibold">{user.energy}</span>
@@ -806,13 +818,20 @@ const Index = () => {
           <div className="flex-1 overflow-y-auto p-4 space-y-4">
             {messages.map((msg) => (
               <div key={msg.id} className="flex gap-3">
-                <Avatar>
-                  <AvatarImage src={msg.avatar} alt={msg.username} />
-                  <AvatarFallback>{msg.username[0]}</AvatarFallback>
-                </Avatar>
+                <button onClick={() => navigate(`/profile/${msg.userId}`)}>
+                  <Avatar className="cursor-pointer hover:ring-2 hover:ring-purple-500 transition-all">
+                    <AvatarImage src={msg.avatar} alt={msg.username} />
+                    <AvatarFallback>{msg.username[0]}</AvatarFallback>
+                  </Avatar>
+                </button>
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="font-semibold">{msg.username}</span>
+                    <button 
+                      onClick={() => navigate(`/profile/${msg.userId}`)}
+                      className="font-semibold hover:text-purple-500 transition-colors"
+                    >
+                      {msg.username}
+                    </button>
                     <span className="text-xs text-muted-foreground">
                       {msg.timestamp.toLocaleTimeString()}
                     </span>
