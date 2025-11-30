@@ -381,37 +381,6 @@ const Index = () => {
   const handlePhotoFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !userId) return;
-    if (!file.type.startsWith('image/')) {
-      alert('Выберите изображение');
-      return;
-    }
-    setUploadingFile(true);
-    const reader = new FileReader();
-    reader.onloadend = async () => {
-      const base64 = reader.result as string;
-      const response = await fetch(
-        'https://functions.poehali.dev/6ab5e5ca-f93c-438c-bc46-7eb7a75e2734',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-User-Id': userId.toString()
-          },
-          body: JSON.stringify({ photoUrl: base64 })
-        }
-      );
-      if (response.ok) {
-        alert('Фото добавлено');
-        loadProfilePhotos();
-      }
-      setUploadingFile(false);
-    };
-    reader.readAsDataURL(file);
-  };
-
-  const handlePhotoFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !userId) return;
 
     if (!file.type.startsWith('image/')) {
       alert('Пожалуйста, выберите изображение');
