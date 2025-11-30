@@ -42,6 +42,8 @@ export default function Chat() {
     loadProfile();
     loadCurrentUserProfile();
     loadMessages();
+    const interval = setInterval(loadMessages, 3000);
+    return () => clearInterval(interval);
   }, [userId]);
 
   useEffect(() => {
@@ -197,15 +199,6 @@ export default function Chat() {
               </div>
             </button>
           )}
-          
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={loadMessages}
-            className="flex-shrink-0"
-          >
-            <Icon name="RefreshCw" size={18} />
-          </Button>
         </div>
       </div>
 
