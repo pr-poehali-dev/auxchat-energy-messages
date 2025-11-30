@@ -1,0 +1,1 @@
+UPDATE t_p53416936_auxchat_energy_messa.users SET avatar_url = NULL WHERE avatar_url NOT LIKE 'http%';
