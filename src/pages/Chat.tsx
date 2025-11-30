@@ -31,13 +31,16 @@ export default function Chat() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [currentUserProfile, setCurrentUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const currentUserId = localStorage.getItem('userId');
+  const currentUsername = localStorage.getItem('username') || 'Я';
 
   useEffect(() => {
     loadProfile();
+    loadCurrentUserProfile();
     loadMessages();
     const interval = setInterval(loadMessages, 3000);
     return () => clearInterval(interval);
@@ -60,6 +63,18 @@ export default function Chat() {
       setProfile(data);
     } catch (error) {
       toast.error('Ошибка загрузки профиля');
+    }
+  };
+
+  const loadCurrentUserProfile = async () => {
+    try {
+      const response = await fetch(
+        `https://functions.poehali.dev/518f730f-1a8e-45ad-b0ed-e9a66c5a3784?user_id=${currentUserId}`
+      );
+      const data = await response.json();
+      setCurrentUserProfile(data);
+    } catch (error) {
+      console.error('Error loading current user profile');
     }
   };
 
@@ -186,10 +201,10 @@ export default function Chat() {
               return (
                 <div
                   key={message.id}
-                  className={`flex ${isOwn ? 'justify-end' : 'justify-start'}`}
+                  className={`flex gap-2 ${isOwn ? 'justify-end' : 'justify-start'}`}
                 >
                   {!isOwn && (
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold text-xs flex-shrink-0 mr-2">
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold text-xs flex-shrink-0">
                       {message.sender.avatarUrl ? (
                         <img src={message.sender.avatarUrl} alt={message.sender.username} className="w-full h-full rounded-full object-cover" />
                       ) : (
@@ -197,7 +212,7 @@ export default function Chat() {
                       )}
                     </div>
                   )}
-                  <div className={`max-w-[70%] sm:max-w-[60%] ${isOwn ? 'order-2' : 'order-1'}`}>
+                  <div className="max-w-[70%] sm:max-w-[60%]">
                     <Card className={`p-2 sm:p-3 ${
                       isOwn
                         ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white'
@@ -214,6 +229,15 @@ export default function Chat() {
                       </p>
                     </Card>
                   </div>
+                  {isOwn && (
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold text-xs flex-shrink-0">
+                      {currentUserProfile?.avatar ? (
+                        <img src={currentUserProfile.avatar} alt={currentUsername} className="w-full h-full rounded-full object-cover" />
+                      ) : (
+                        currentUsername[0]?.toUpperCase()
+                      )}
+                    </div>
+                  )}
                 </div>
               );
             })}
