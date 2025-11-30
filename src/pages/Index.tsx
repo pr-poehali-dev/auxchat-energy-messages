@@ -392,6 +392,36 @@ const Index = () => {
     reader.readAsDataURL(file);
   };
 
+  const setMainPhoto = async (photoId: number) => {
+    if (!userId) return;
+    const response = await fetch(
+      'https://functions.poehali.dev/6ab5e5ca-f93c-438c-bc46-7eb7a75e2734',
+      {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-User-Id': userId.toString()
+        },
+        body: JSON.stringify({ photoId, action: 'set_main' })
+      }
+    );
+    if (response.ok) {
+      loadProfilePhotos();
+      if (user) {
+        const updatedPhotos = await fetch(
+          `https://functions.poehali.dev/6ab5e5ca-f93c-438c-bc46-7eb7a75e2734?userId=${userId}`,
+          {
+            headers: { 'X-User-Id': userId.toString() }
+          }
+        );
+        const data = await updatedPhotos.json();
+        if (data.photos && data.photos.length > 0) {
+          setUser({ ...user, avatar: data.photos[0].url });
+        }
+      }
+    }
+  };
+
   const deletePhoto = async (photoId: number) => {
     if (!userId) return;
     const response = await fetch(
@@ -736,6 +766,11 @@ const Index = () => {
                         <div className="grid grid-cols-3 gap-2 mb-4">
                           {profilePhotos.map((photo, index) => (
                             <div key={photo.id} className="relative group aspect-square">
+                              {index === 0 && (
+                                <div className="absolute top-1 left-1 px-2 py-0.5 bg-blue-500 rounded-full z-10">
+                                  <span className="text-[10px] text-white font-semibold">Главное</span>
+                                </div>
+                              )}
                               <button
                                 onClick={() => openPhotoViewer(index)}
                                 className="w-full h-full"
@@ -746,15 +781,30 @@ const Index = () => {
                                   className="w-full h-full object-cover rounded-lg hover:opacity-90 transition-opacity cursor-pointer"
                                 />
                               </button>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  deletePhoto(photo.id);
-                                }}
-                                className="absolute top-1 right-1 p-1 bg-red-500/80 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10"
-                              >
-                                <Icon name="Trash2" size={12} className="text-white" />
-                              </button>
+                              <div className="absolute bottom-1 left-1 right-1 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                                {index !== 0 && (
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setMainPhoto(photo.id);
+                                    }}
+                                    className="flex-1 p-1 bg-blue-500/90 rounded text-white hover:bg-blue-600"
+                                    title="Сделать главным"
+                                  >
+                                    <Icon name="Star" size={12} />
+                                  </button>
+                                )}
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    deletePhoto(photo.id);
+                                  }}
+                                  className="flex-1 p-1 bg-red-500/90 rounded text-white hover:bg-red-600"
+                                  title="Удалить"
+                                >
+                                  <Icon name="Trash2" size={12} />
+                                </button>
+                              </div>
                             </div>
                           ))}
                         </div>

@@ -17,7 +17,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             'statusCode': 200,
             'headers': {
                 'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
+                'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
                 'Access-Control-Allow-Headers': 'Content-Type, X-User-Id',
                 'Access-Control-Max-Age': '86400'
             },
@@ -45,13 +45,13 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         target_user_id = query_params.get('userId', user_id)
         
         cur.execute(
-            "SELECT id, photo_url, created_at FROM t_p53416936_auxchat_energy_messa.user_photos WHERE user_id = %s ORDER BY created_at DESC LIMIT 6",
+            "SELECT id, photo_url, created_at, display_order FROM t_p53416936_auxchat_energy_messa.user_photos WHERE user_id = %s ORDER BY display_order ASC, created_at DESC LIMIT 6",
             (target_user_id,)
         )
         rows = cur.fetchall()
         
         photos = [
-            {'id': row[0], 'url': row[1], 'created_at': row[2].isoformat()}
+            {'id': row[0], 'url': row[1], 'created_at': row[2].isoformat(), 'order': row[3]}
             for row in rows
         ]
         
@@ -105,6 +105,40 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             'statusCode': 200,
             'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
             'body': json.dumps({'success': True, 'photoId': photo_id})
+        }
+    
+    if method == 'PUT':
+        body_data = json.loads(event.get('body', '{}'))
+        photo_id = body_data.get('photoId')
+        action = body_data.get('action')
+        
+        if not photo_id or action != 'set_main':
+            cur.close()
+            conn.close()
+            return {
+                'statusCode': 400,
+                'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                'body': json.dumps({'error': 'photoId and action=set_main required'})
+            }
+        
+        cur.execute(
+            "UPDATE t_p53416936_auxchat_energy_messa.user_photos SET display_order = 999 WHERE user_id = %s",
+            (user_id,)
+        )
+        
+        cur.execute(
+            "UPDATE t_p53416936_auxchat_energy_messa.user_photos SET display_order = 0 WHERE id = %s AND user_id = %s",
+            (photo_id, user_id)
+        )
+        
+        conn.commit()
+        cur.close()
+        conn.close()
+        
+        return {
+            'statusCode': 200,
+            'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+            'body': json.dumps({'success': True})
         }
     
     if method == 'DELETE':
