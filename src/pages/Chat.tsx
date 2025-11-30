@@ -60,7 +60,17 @@ export default function Chat() {
         `https://functions.poehali.dev/518f730f-1a8e-45ad-b0ed-e9a66c5a3784?user_id=${userId}`
       );
       const data = await response.json();
-      setProfile(data);
+      
+      const photosResponse = await fetch(
+        `https://functions.poehali.dev/6ab5e5ca-f93c-438c-bc46-7eb7a75e2734?userId=${userId}`,
+        { headers: { 'X-User-Id': currentUserId || '0' } }
+      );
+      const photosData = await photosResponse.json();
+      const userAvatar = photosData.photos && photosData.photos.length > 0 
+        ? photosData.photos[0].url 
+        : data.avatar || '';
+      
+      setProfile({ ...data, avatar: userAvatar });
     } catch (error) {
       toast.error('Ошибка загрузки профиля');
     }
@@ -72,7 +82,17 @@ export default function Chat() {
         `https://functions.poehali.dev/518f730f-1a8e-45ad-b0ed-e9a66c5a3784?user_id=${currentUserId}`
       );
       const data = await response.json();
-      setCurrentUserProfile(data);
+      
+      const photosResponse = await fetch(
+        `https://functions.poehali.dev/6ab5e5ca-f93c-438c-bc46-7eb7a75e2734?userId=${currentUserId}`,
+        { headers: { 'X-User-Id': currentUserId || '0' } }
+      );
+      const photosData = await photosResponse.json();
+      const userAvatar = photosData.photos && photosData.photos.length > 0 
+        ? photosData.photos[0].url 
+        : data.avatar || '';
+      
+      setCurrentUserProfile({ ...data, avatar: userAvatar });
     } catch (error) {
       console.error('Error loading current user profile');
     }
