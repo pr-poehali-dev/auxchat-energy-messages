@@ -68,7 +68,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             
             query = f"""
                 SELECT pm.id, pm.sender_id, pm.receiver_id, pm.text, pm.is_read, pm.created_at,
-                       u.username, u.avatar_url
+                       u.username, NULL as avatar_url
                 FROM t_p53416936_auxchat_energy_messa.private_messages pm
                 JOIN t_p53416936_auxchat_energy_messa.users u ON u.id = pm.sender_id
                 WHERE (pm.sender_id = {user_id} AND pm.receiver_id = {other_user_id}) 
