@@ -1,5 +1,5 @@
 '''
-Business: Upload images from device to S3 storage
+Business: Upload images from device to imgbb storage
 Args: event with base64 encoded image file, headers with X-User-Id
 Returns: Public URL of uploaded image
 '''
@@ -7,7 +7,6 @@ Returns: Public URL of uploaded image
 import json
 import os
 import base64
-import uuid
 from typing import Dict, Any
 import urllib.request
 from urllib.parse import urlencode
@@ -37,7 +36,6 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     
     headers = event.get('headers', {})
     user_id = headers.get('X-User-Id') or headers.get('x-user-id')
-    print(f"[DEBUG] User ID: {user_id}")
     
     if not user_id:
         return {
@@ -48,8 +46,6 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     
     body_data = json.loads(event.get('body', '{}'))
     file_data = body_data.get('fileData', '')
-    file_name = body_data.get('fileName', 'image.jpg')
-    print(f"[DEBUG] File name: {file_name}, Data length: {len(file_data)}")
     
     if not file_data:
         return {
@@ -61,72 +57,37 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     if file_data.startswith('data:'):
         file_data = file_data.split(',', 1)[1]
     
-    try:
-        file_bytes = base64.b64decode(file_data)
-        print(f"[DEBUG] Decoded file bytes: {len(file_bytes)}")
-    except Exception as e:
-        print(f"[ERROR] Base64 decode failed: {e}")
+    api_key = os.environ.get('IMGBB_API_KEY')
+    if not api_key:
         return {
-            'statusCode': 400,
+            'statusCode': 500,
             'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-            'body': json.dumps({'error': 'Invalid base64 data'})
+            'body': json.dumps({'error': 'IMGBB_API_KEY not configured'})
         }
     
-    ext = file_name.split('.')[-1].lower() if '.' in file_name else 'jpg'
-    if ext not in ['jpg', 'jpeg', 'png', 'gif', 'webp']:
-        ext = 'jpg'
+    upload_url = f'https://api.imgbb.com/1/upload?key={api_key}'
+    post_data = urlencode({'image': file_data}).encode()
     
-    unique_name = f"user-{user_id}-{uuid.uuid4()}.{ext}"
-    print(f"[DEBUG] Unique name: {unique_name}")
-    
-    upload_url = 'https://poehali.dev/api/upload-to-s3'
-    boundary = f"----Boundary{uuid.uuid4().hex}"
-    print(f"[DEBUG] Starting S3 upload...")
-    
-    body_parts = []
-    body_parts.append(f'--{boundary}'.encode())
-    body_parts.append(f'Content-Disposition: form-data; name="file"; filename="{unique_name}"'.encode())
-    body_parts.append(f'Content-Type: image/{ext}'.encode())
-    body_parts.append(b'')
-    body_parts.append(file_bytes)
-    body_parts.append(f'--{boundary}--'.encode())
-    
-    body = b'\r\n'.join(body_parts)
-    
-    req = urllib.request.Request(
-        upload_url,
-        data=body,
-        headers={
-            'Content-Type': f'multipart/form-data; boundary={boundary}',
-            'Content-Length': str(len(body))
-        },
-        method='POST'
-    )
+    req = urllib.request.Request(upload_url, data=post_data, method='POST')
     
     try:
-        print(f"[DEBUG] Sending request to S3...")
         with urllib.request.urlopen(req, timeout=30) as response:
-            print(f"[DEBUG] S3 response status: {response.status}")
             result = json.loads(response.read().decode())
-            print(f"[DEBUG] S3 response body: {result}")
-            public_url = result.get('url')
             
-            if not public_url:
-                print(f"[ERROR] No URL in S3 response")
+            if result.get('success'):
+                public_url = result['data']['url']
+                return {
+                    'statusCode': 200,
+                    'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                    'body': json.dumps({'url': public_url})
+                }
+            else:
                 return {
                     'statusCode': 500,
                     'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-                    'body': json.dumps({'error': 'Upload failed - no URL returned'})
+                    'body': json.dumps({'error': 'Upload failed'})
                 }
-            
-            print(f"[DEBUG] Upload success, URL: {public_url}")
-            return {
-                'statusCode': 200,
-                'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-                'body': json.dumps({'url': public_url})
-            }
     except Exception as e:
-        print(f"[ERROR] Upload exception: {str(e)}")
         return {
             'statusCode': 500,
             'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
