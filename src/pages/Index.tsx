@@ -644,34 +644,34 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 flex flex-col">
-      <header className="bg-white/80 backdrop-blur-sm border-b border-gray-200 p-4 flex justify-between items-center sticky top-0 z-10">
+      <header className="bg-white/80 backdrop-blur-sm border-b border-gray-200 px-3 py-2 flex justify-between items-center sticky top-0 z-10">
         <div className="flex items-center gap-2">
-          <Icon name="MessageCircle" className="text-primary" size={32} />
-          <h1 className="text-2xl font-bold text-primary">auxchat</h1>
+          <Icon name="MessageCircle" className="text-primary" size={24} />
+          <h1 className="text-xl font-bold text-primary">auxchat</h1>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
           {user ? (
             <>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => navigate('/messages')}
-                className="relative"
+                className="relative h-8 w-8 p-0"
               >
-                <Icon name="MessageCircle" size={20} />
+                <Icon name="MessageCircle" size={18} />
               </Button>
-              <div className="flex items-center gap-2 mr-2">
-                <Icon name="Zap" className="text-yellow-500" size={20} />
-                <span className="font-semibold">{user.energy}</span>
+              <div className="flex items-center gap-1">
+                <Icon name="Zap" className="text-yellow-500" size={16} />
+                <span className="text-sm font-semibold">{user.energy}</span>
               </div>
               <Dialog open={showProfile} onOpenChange={setShowProfile}>
                 <DialogTrigger asChild>
-                  <Button variant="ghost" size="sm">
-                    <Avatar className="h-8 w-8">
+                  <Button variant="ghost" size="sm" className="h-8 px-2">
+                    <Avatar className="h-7 w-7">
                       <AvatarImage src={user.avatar} alt={user.username} />
                       <AvatarFallback>{user.username[0]}</AvatarFallback>
                     </Avatar>
-                    <span className="ml-2">{user.username}</span>
+                    <span className="ml-1.5 text-sm">{user.username}</span>
                   </Button>
                 </DialogTrigger>
                 <DialogContent>
@@ -1059,9 +1059,9 @@ const Index = () => {
         </div>
       </header>
 
-      <main className="flex-1 container mx-auto max-w-4xl p-4 flex flex-col overflow-hidden">
+      <main className="flex-1 container mx-auto max-w-4xl p-2 md:p-4 flex flex-col overflow-hidden">
         <Card className="flex-1 flex flex-col shadow-lg">
-          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          <div className="flex-1 overflow-y-auto p-2 md:p-4 space-y-2 md:space-y-4">
             {displayLimit < messages.length && (
               <div className="text-center pb-2">
                 <Button
@@ -1075,26 +1075,26 @@ const Index = () => {
               </div>
             )}
             {messages.slice(-displayLimit).map((msg) => (
-              <div key={msg.id} className="flex gap-3">
+              <div key={msg.id} className="flex gap-2">
                 <button onClick={() => navigate(`/profile/${msg.userId}`)}>
-                  <Avatar className="cursor-pointer hover:ring-2 hover:ring-purple-500 transition-all">
+                  <Avatar className="cursor-pointer hover:ring-2 hover:ring-purple-500 transition-all h-8 w-8 md:h-10 md:w-10">
                     <AvatarImage src={msg.avatar} alt={msg.username} />
                     <AvatarFallback>{msg.username[0]}</AvatarFallback>
                   </Avatar>
                 </button>
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5 mb-0.5">
                     <button 
                       onClick={() => navigate(`/profile/${msg.userId}`)}
-                      className="font-semibold hover:text-purple-500 transition-colors"
+                      className="font-semibold text-sm hover:text-purple-500 transition-colors truncate"
                     >
                       {msg.username}
                     </button>
-                    <span className="text-xs text-muted-foreground">
+                    <span className="text-[10px] text-muted-foreground whitespace-nowrap">
                       {msg.timestamp.toLocaleTimeString()}
                     </span>
                   </div>
-                  <p className="text-sm mb-2">{msg.text}</p>
+                  <p className="text-sm mb-1.5 break-words">{msg.text}</p>
                   <div className="flex flex-wrap gap-1">
                     {msg.reactions.map((reaction, i) => (
                       <button
@@ -1135,8 +1135,8 @@ const Index = () => {
             ))}
           </div>
           
-          <div className="p-4 border-t bg-white flex-shrink-0">
-            <div className="flex gap-2">
+          <div className="p-2 md:p-4 border-t bg-white flex-shrink-0">
+            <div className="flex gap-1.5">
               <Input
                 placeholder={user ? "Напишите сообщение..." : "Войдите для отправки"}
                 value={messageText}
@@ -1144,8 +1144,8 @@ const Index = () => {
                 onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
                 disabled={!user}
               />
-              <Button onClick={handleSendMessage} disabled={!user}>
-                <Icon name="Send" size={20} />
+              <Button onClick={handleSendMessage} disabled={!user} className="h-9 w-9 p-0">
+                <Icon name="Send" size={18} />
               </Button>
             </div>
           </div>
