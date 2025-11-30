@@ -409,6 +409,64 @@ const Index = () => {
     reader.readAsDataURL(file);
   };
 
+  const handlePhotoFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !userId) return;
+
+    if (!file.type.startsWith('image/')) {
+      alert('Пожалуйста, выберите изображение');
+      return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      alert('Размер файла не должен превышать 10 МБ');
+      return;
+    }
+
+    setUploadingFile(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const uploadResponse = await fetch('https://poehali.dev/api/upload-to-s3', {
+        method: 'POST',
+        body: formData
+      });
+
+      if (!uploadResponse.ok) {
+        alert('Ошибка загрузки фото');
+        setUploadingFile(false);
+        return;
+      }
+
+      const { url } = await uploadResponse.json();
+
+      const addPhotoResponse = await fetch(
+        'https://functions.poehali.dev/6ab5e5ca-f93c-438c-bc46-7eb7a75e2734',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-User-Id': userId.toString()
+          },
+          body: JSON.stringify({ photoUrl: url })
+        }
+      );
+
+      if (addPhotoResponse.ok) {
+        alert('Фото добавлено');
+        loadProfilePhotos();
+      } else {
+        const error = await addPhotoResponse.json();
+        alert(error.error || 'Ошибка добавления фото');
+      }
+    } catch (error) {
+      alert('Ошибка загрузки фото');
+    } finally {
+      setUploadingFile(false);
+    }
+  };
+
   const setMainPhoto = async (photoId: number) => {
     if (!userId) return;
     const response = await fetch(
@@ -773,29 +831,35 @@ const Index = () => {
                       <h3 className="font-semibold mb-3">Фотографии ({profilePhotos.length}/6)</h3>
                       
                       {profilePhotos.length < 6 && (
-                        <div className="mb-4 space-y-3">
-                          <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
-                            <p className="text-xs text-blue-800 mb-2">
-                              💡 <strong>Как добавить фото:</strong>
-                            </p>
-                            <ol className="text-xs text-blue-700 space-y-1 ml-4 list-decimal">
-                              <li>Загрузите картинку на <a href="https://imgur.com/upload" target="_blank" className="underline font-semibold">imgur.com</a> или другой хостинг</li>
-                              <li>Скопируйте прямую ссылку на картинку (заканчивается на .jpg, .png)</li>
-                              <li>Вставьте URL в поле ниже</li>
-                            </ol>
-                          </div>
-                          <div className="flex gap-2">
-                            <Input
-                              type="text"
-                              placeholder="https://i.imgur.com/example.jpg"
-                              value={photoUrl}
-                              onChange={(e) => setPhotoUrl(e.target.value)}
-                              className="flex-1"
+                        <div className="mb-4">
+                          <label>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={handlePhotoFileUpload}
+                              className="hidden"
+                              disabled={uploadingFile}
                             />
-                            <Button size="sm" onClick={addPhotoByUrl} disabled={isAddingPhoto || !photoUrl.trim()}>
-                              <Icon name="Plus" size={14} />
+                            <Button 
+                              asChild
+                              disabled={uploadingFile}
+                              className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:opacity-90"
+                            >
+                              <span className="cursor-pointer flex items-center justify-center">
+                                {uploadingFile ? (
+                                  <>
+                                    <Icon name="Loader2" size={20} className="mr-2 animate-spin" />
+                                    Загрузка...
+                                  </>
+                                ) : (
+                                  <>
+                                    <Icon name="Upload" size={20} className="mr-2" />
+                                    Загрузить фото
+                                  </>
+                                )}
+                              </span>
                             </Button>
-                          </div>
+                          </label>
                         </div>
                       )}
 
