@@ -222,7 +222,7 @@ export default function Chat() {
         )}
       </div>
 
-      <div className="bg-card/90 backdrop-blur border-t border-purple-500/20 p-3 sm:p-4 sticky bottom-0">
+      <div className="bg-card/90 backdrop-blur border-t border-purple-500/20 p-3 sm:p-4">
         <div className="container mx-auto max-w-4xl flex gap-2">
           <textarea
             value={newMessage}
