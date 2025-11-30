@@ -46,10 +46,14 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     conn = psycopg2.connect(dsn)
     cur = conn.cursor()
     
-    cur.execute(
-        "UPDATE t_p53416936_auxchat_energy_messa.users SET avatar_url = %s WHERE id = %s RETURNING avatar_url",
-        (avatar, user_id)
-    )
+    avatar_escaped = avatar.replace("'", "''")
+    
+    cur.execute(f"""
+        UPDATE t_p53416936_auxchat_energy_messa.users 
+        SET avatar_url = '{avatar_escaped}' 
+        WHERE id = {user_id} 
+        RETURNING avatar_url
+    """)
     result = cur.fetchone()
     
     conn.commit()

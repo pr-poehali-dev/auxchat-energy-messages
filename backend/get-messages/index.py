@@ -42,7 +42,11 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     cur.execute(f"""
         SELECT 
             m.id, m.text, m.created_at,
-            u.id, u.username
+            u.id, u.username, 
+            CASE 
+                WHEN u.avatar_url LIKE 'http%' THEN u.avatar_url
+                ELSE NULL
+            END as avatar_url
         FROM t_p53416936_auxchat_energy_messa.messages m
         JOIN t_p53416936_auxchat_energy_messa.users u ON m.user_id = u.id
         ORDER BY m.created_at DESC
@@ -53,7 +57,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     messages = []
     
     for row in rows:
-        msg_id, text, created_at, user_id, username = row
+        msg_id, text, created_at, user_id, username, avatar_url = row
         
         cur.execute(f"""
             SELECT emoji, COUNT(*) as count
@@ -64,6 +68,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         
         reactions = [{'emoji': r[0], 'count': r[1]} for r in cur.fetchall()]
         
+        avatar = avatar_url if avatar_url else f'https://api.dicebear.com/7.x/avataaars/svg?seed={username}'
+        
         messages.append({
             'id': msg_id,
             'text': text,
@@ -71,7 +77,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             'user': {
                 'id': user_id,
                 'username': username,
-                'avatar': f'https://api.dicebear.com/7.x/avataaars/svg?seed={username}'
+                'avatar': avatar
             },
             'reactions': reactions
         })
