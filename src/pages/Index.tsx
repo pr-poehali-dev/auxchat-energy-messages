@@ -56,6 +56,8 @@ const Index = () => {
   const [photoUrl, setPhotoUrl] = useState("");
   const [isAddingPhoto, setIsAddingPhoto] = useState(false);
   const [uploadingFile, setUploadingFile] = useState(false);
+  const [viewerOpen, setViewerOpen] = useState(false);
+  const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
   const photoFileInputRef = useRef<HTMLInputElement>(null);
 
   const reactionEmojis = ["❤️", "👍", "🔥", "🎉", "😂", "😍"];
@@ -389,6 +391,19 @@ const Index = () => {
       alert('Фото удалено');
       loadProfilePhotos();
     }
+  };
+
+  const openPhotoViewer = (index: number) => {
+    setCurrentPhotoIndex(index);
+    setViewerOpen(true);
+  };
+
+  const nextPhoto = () => {
+    setCurrentPhotoIndex((prev) => (prev + 1) % profilePhotos.length);
+  };
+
+  const prevPhoto = () => {
+    setCurrentPhotoIndex((prev) => (prev - 1 + profilePhotos.length) % profilePhotos.length);
   };
 
   const handleLogout = () => {
@@ -740,16 +755,24 @@ const Index = () => {
 
                       {profilePhotos.length > 0 ? (
                         <div className="grid grid-cols-3 gap-2 mb-4">
-                          {profilePhotos.map((photo) => (
+                          {profilePhotos.map((photo, index) => (
                             <div key={photo.id} className="relative group aspect-square">
-                              <img
-                                src={photo.url}
-                                alt="Photo"
-                                className="w-full h-full object-cover rounded-lg"
-                              />
                               <button
-                                onClick={() => deletePhoto(photo.id)}
-                                className="absolute top-1 right-1 p-1 bg-red-500/80 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                                onClick={() => openPhotoViewer(index)}
+                                className="w-full h-full"
+                              >
+                                <img
+                                  src={photo.url}
+                                  alt="Photo"
+                                  className="w-full h-full object-cover rounded-lg hover:opacity-90 transition-opacity cursor-pointer"
+                                />
+                              </button>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  deletePhoto(photo.id);
+                                }}
+                                className="absolute top-1 right-1 p-1 bg-red-500/80 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10"
                               >
                                 <Icon name="Trash2" size={12} className="text-white" />
                               </button>
@@ -1070,6 +1093,58 @@ const Index = () => {
           </div>
         </Card>
       </main>
+
+      {viewerOpen && profilePhotos.length > 0 && (
+        <div className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center">
+          <button
+            onClick={() => setViewerOpen(false)}
+            className="absolute top-4 right-4 p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors"
+          >
+            <Icon name="X" size={24} className="text-white" />
+          </button>
+
+          {profilePhotos.length > 1 && (
+            <>
+              <button
+                onClick={prevPhoto}
+                className="absolute left-4 p-3 bg-white/10 hover:bg-white/20 rounded-full transition-colors"
+              >
+                <Icon name="ChevronLeft" size={32} className="text-white" />
+              </button>
+              <button
+                onClick={nextPhoto}
+                className="absolute right-4 p-3 bg-white/10 hover:bg-white/20 rounded-full transition-colors"
+              >
+                <Icon name="ChevronRight" size={32} className="text-white" />
+              </button>
+            </>
+          )}
+
+          <div className="max-w-6xl max-h-[90vh] w-full h-full flex items-center justify-center p-4">
+            <img
+              src={profilePhotos[currentPhotoIndex].url}
+              alt="Full size photo"
+              className="max-w-full max-h-full object-contain rounded-lg"
+            />
+          </div>
+
+          {profilePhotos.length > 1 && (
+            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2">
+              {profilePhotos.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => setCurrentPhotoIndex(index)}
+                  className={`w-2 h-2 rounded-full transition-all ${
+                    index === currentPhotoIndex
+                      ? 'bg-white w-8'
+                      : 'bg-white/50 hover:bg-white/70'
+                  }`}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };

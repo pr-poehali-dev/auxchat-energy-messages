@@ -29,6 +29,8 @@ export default function Profile() {
   const [photoUrl, setPhotoUrl] = useState('');
   const [isAddingPhoto, setIsAddingPhoto] = useState(false);
   const [uploadingFile, setUploadingFile] = useState(false);
+  const [viewerOpen, setViewerOpen] = useState(false);
+  const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
 
   const currentUserId = localStorage.getItem('userId');
   const isOwnProfile = String(currentUserId) === String(userId);
@@ -125,6 +127,31 @@ export default function Profile() {
   const openChat = () => {
     navigate(`/chat/${userId}`);
   };
+
+  const openPhotoViewer = (index: number) => {
+    setCurrentPhotoIndex(index);
+    setViewerOpen(true);
+  };
+
+  const nextPhoto = () => {
+    setCurrentPhotoIndex((prev) => (prev + 1) % photos.length);
+  };
+
+  const prevPhoto = () => {
+    setCurrentPhotoIndex((prev) => (prev - 1 + photos.length) % photos.length);
+  };
+
+  const handleKeyDown = (e: KeyboardEvent) => {
+    if (!viewerOpen) return;
+    if (e.key === 'ArrowRight') nextPhoto();
+    if (e.key === 'ArrowLeft') prevPhoto();
+    if (e.key === 'Escape') setViewerOpen(false);
+  };
+
+  useEffect(() => {
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [viewerOpen, photos.length]);
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -299,17 +326,25 @@ export default function Profile() {
 
             {photos.length > 0 ? (
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                {photos.map((photo) => (
+                {photos.map((photo, index) => (
                   <div key={photo.id} className="relative group aspect-square">
-                    <img
-                      src={photo.url}
-                      alt="User photo"
-                      className="w-full h-full object-cover rounded-lg"
-                    />
+                    <button
+                      onClick={() => openPhotoViewer(index)}
+                      className="w-full h-full"
+                    >
+                      <img
+                        src={photo.url}
+                        alt="User photo"
+                        className="w-full h-full object-cover rounded-lg hover:opacity-90 transition-opacity cursor-pointer"
+                      />
+                    </button>
                     {isOwnProfile && (
                       <button
-                        onClick={() => deletePhoto(photo.id)}
-                        className="absolute top-2 right-2 p-2 bg-red-500/80 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          deletePhoto(photo.id);
+                        }}
+                        className="absolute top-2 right-2 p-2 bg-red-500/80 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10"
                       >
                         <Icon name="Trash2" size={16} className="text-white" />
                       </button>
@@ -325,6 +360,58 @@ export default function Profile() {
           </div>
         </Card>
       </div>
+
+      {viewerOpen && photos.length > 0 && (
+        <div className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center">
+          <button
+            onClick={() => setViewerOpen(false)}
+            className="absolute top-4 right-4 p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors"
+          >
+            <Icon name="X" size={24} className="text-white" />
+          </button>
+
+          {photos.length > 1 && (
+            <>
+              <button
+                onClick={prevPhoto}
+                className="absolute left-4 p-3 bg-white/10 hover:bg-white/20 rounded-full transition-colors"
+              >
+                <Icon name="ChevronLeft" size={32} className="text-white" />
+              </button>
+              <button
+                onClick={nextPhoto}
+                className="absolute right-4 p-3 bg-white/10 hover:bg-white/20 rounded-full transition-colors"
+              >
+                <Icon name="ChevronRight" size={32} className="text-white" />
+              </button>
+            </>
+          )}
+
+          <div className="max-w-6xl max-h-[90vh] w-full h-full flex items-center justify-center p-4">
+            <img
+              src={photos[currentPhotoIndex].url}
+              alt="Full size photo"
+              className="max-w-full max-h-full object-contain rounded-lg"
+            />
+          </div>
+
+          {photos.length > 1 && (
+            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2">
+              {photos.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => setCurrentPhotoIndex(index)}
+                  className={`w-2 h-2 rounded-full transition-all ${
+                    index === currentPhotoIndex
+                      ? 'bg-white w-8'
+                      : 'bg-white/50 hover:bg-white/70'
+                  }`}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
