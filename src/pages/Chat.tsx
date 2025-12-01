@@ -221,18 +221,9 @@ export default function Chat() {
               return (
                 <div
                   key={message.id}
-                  className={`flex gap-2 ${isOwn ? 'justify-end' : 'justify-start'}`}
+                  className={`flex ${isOwn ? 'justify-end' : 'justify-start'}`}
                 >
-                  {!isOwn && (
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold text-xs flex-shrink-0">
-                      {message.sender.avatarUrl ? (
-                        <img src={message.sender.avatarUrl} alt={message.sender.username} className="w-full h-full rounded-full object-cover" />
-                      ) : (
-                        message.sender.username[0]?.toUpperCase()
-                      )}
-                    </div>
-                  )}
-                  <div className="max-w-[70%] sm:max-w-[60%]">
+                  <div className="max-w-[75%] sm:max-w-[65%]">
                     <Card className={`p-2 sm:p-3 ${
                       isOwn
                         ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white'
@@ -249,15 +240,6 @@ export default function Chat() {
                       </p>
                     </Card>
                   </div>
-                  {isOwn && (
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold text-xs flex-shrink-0">
-                      {currentUserProfile?.avatar ? (
-                        <img src={currentUserProfile.avatar} alt={currentUsername} className="w-full h-full rounded-full object-cover" />
-                      ) : (
-                        currentUsername[0]?.toUpperCase()
-                      )}
-                    </div>
-                  )}
                 </div>
               );
             })}
