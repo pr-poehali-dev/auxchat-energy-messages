@@ -135,19 +135,22 @@ export default function Chat() {
       const data = await response.json();
       const newMessages = data.messages || [];
       
-      // Проверяем новые входящие сообщения
-      if (lastMessageCountRef.current > 0 && newMessages.length > lastMessageCountRef.current) {
+      // Инициализируем счётчик при первой загрузке
+      if (lastMessageCountRef.current === 0) {
+        lastMessageCountRef.current = newMessages.length;
+      } else if (newMessages.length > lastMessageCountRef.current) {
+        // Проверяем новые входящие сообщения
         const latestMessage = newMessages[newMessages.length - 1];
         // Если последнее сообщение от собеседника (не от нас)
         if (String(latestMessage.senderId) !== String(currentUserId)) {
           playNotificationSound();
-          toast.info(`${profile?.username || 'Новое'} сообщение`, {
+          toast.info(`Новое сообщение от ${profile?.username || 'пользователя'}`, {
             description: latestMessage.text.slice(0, 50) + (latestMessage.text.length > 50 ? '...' : '')
           });
         }
+        lastMessageCountRef.current = newMessages.length;
       }
       
-      lastMessageCountRef.current = newMessages.length;
       setMessages(newMessages);
     } catch (error) {
       console.error('Error loading messages:', error);

@@ -72,16 +72,19 @@ export default function Conversations() {
       // Считаем общее количество непрочитанных
       const totalUnread = newConversations.reduce((sum: number, conv: Conversation) => sum + conv.unreadCount, 0);
       
-      // Если появились новые непрочитанные
-      if (prevUnreadCountRef.current > 0 && totalUnread > prevUnreadCountRef.current) {
+      // Инициализируем счётчик при первой загрузке
+      if (prevUnreadCountRef.current === 0) {
+        prevUnreadCountRef.current = totalUnread;
+      } else if (totalUnread > prevUnreadCountRef.current) {
+        // Если появились новые непрочитанные
         playNotificationSound();
         const newMessages = totalUnread - prevUnreadCountRef.current;
         toast.info('Новое личное сообщение', {
           description: `У вас ${newMessages} ${newMessages === 1 ? 'непрочитанное сообщение' : 'непрочитанных сообщения'}`
         });
+        prevUnreadCountRef.current = totalUnread;
       }
       
-      prevUnreadCountRef.current = totalUnread;
       setConversations(newConversations);
     } catch (error) {
       console.error('Error loading conversations:', error);

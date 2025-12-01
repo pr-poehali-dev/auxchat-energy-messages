@@ -120,12 +120,15 @@ const Index = () => {
       const data = await response.json();
       const total = (data.conversations || []).reduce((sum: number, conv: any) => sum + (conv.unreadCount || 0), 0);
       
-      // Если появились новые непрочитанные
-      if (prevUnreadRef.current > 0 && total > prevUnreadRef.current) {
+      // Инициализируем счётчик при первой загрузке
+      if (prevUnreadRef.current === 0) {
+        prevUnreadRef.current = total;
+      } else if (total > prevUnreadRef.current) {
+        // Если появились новые непрочитанные
         playNotificationSound();
+        prevUnreadRef.current = total;
       }
       
-      prevUnreadRef.current = total;
       setUnreadCount(total);
     } catch (error) {
       console.error('Error loading unread count:', error);
