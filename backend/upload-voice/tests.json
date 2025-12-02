@@ -1,0 +1,18 @@
+{
+  "tests": [
+    {
+      "name": "Upload voice message",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "audioData": "UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=",
+        "extension": "webm"
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "url": "string"
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}
