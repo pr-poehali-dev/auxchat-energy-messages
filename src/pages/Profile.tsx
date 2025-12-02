@@ -281,10 +281,12 @@ export default function Profile() {
                 <p className="text-sm text-muted-foreground mb-3">{profile.bio}</p>
               )}
 
-              <div className="flex items-center gap-1.5 text-sm text-muted-foreground mb-3">
-                <Icon name="Zap" size={14} className="text-yellow-500" />
-                <span className="text-sm">{profile.energy} энергии</span>
-              </div>
+              {isOwnProfile && (
+                <div className="flex items-center gap-1.5 text-sm text-muted-foreground mb-3">
+                  <Icon name="Zap" size={14} className="text-yellow-500" />
+                  <span className="text-sm">{profile.energy} энергии</span>
+                </div>
+              )}
 
               {!isOwnProfile && (
                 <Button onClick={openChat} className="bg-gradient-to-r from-purple-500 to-pink-500 h-9 text-sm w-full md:w-auto">

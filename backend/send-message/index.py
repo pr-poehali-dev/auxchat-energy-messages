@@ -86,7 +86,10 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             'body': json.dumps({'error': 'Недостаточно энергии для отправки сообщения'})
         }
     
-    cur.execute("UPDATE t_p53416936_auxchat_energy_messa.users SET energy = energy - 10 WHERE id = %s", (user_id,))
+    cur.execute(
+        "UPDATE t_p53416936_auxchat_energy_messa.users SET energy = energy - 10, last_activity = CURRENT_TIMESTAMP WHERE id = %s", 
+        (user_id,)
+    )
     
     cur.execute(
         "INSERT INTO t_p53416936_auxchat_energy_messa.messages (user_id, text) VALUES (%s, %s) RETURNING id, created_at",

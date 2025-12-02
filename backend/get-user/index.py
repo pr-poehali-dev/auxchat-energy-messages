@@ -46,7 +46,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     cur = conn.cursor()
     
     cur.execute(
-        "SELECT id, phone, username, avatar_url, energy, is_banned, bio, status FROM t_p53416936_auxchat_energy_messa.users WHERE id = %s",
+        "SELECT id, phone, username, avatar_url, energy, is_banned, bio, last_activity FROM t_p53416936_auxchat_energy_messa.users WHERE id = %s",
         (user_id,)
     )
     row = cur.fetchone()
@@ -61,6 +61,14 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             'body': json.dumps({'error': 'User not found'})
         }
     
+    # Проверяем активность (онлайн если был активен менее 5 минут назад)
+    from datetime import datetime, timedelta
+    last_activity = row[7]
+    is_online = False
+    if last_activity:
+        time_diff = datetime.utcnow() - last_activity
+        is_online = time_diff < timedelta(minutes=5)
+    
     return {
         'statusCode': 200,
         'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
@@ -73,6 +81,6 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             'is_admin': False,
             'is_banned': row[5] if row[5] is not None else False,
             'bio': row[6] if row[6] else '',
-            'status': row[7] if row[7] else 'online'
+            'status': 'online' if is_online else 'offline'
         })
     }

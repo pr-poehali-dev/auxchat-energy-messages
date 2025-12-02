@@ -144,8 +144,14 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 RETURNING id
             """
             cur.execute(insert_query)
-            
             message_id = cur.fetchone()[0]
+            
+            # Обновляем last_activity отправителя
+            cur.execute(
+                "UPDATE t_p53416936_auxchat_energy_messa.users SET last_activity = CURRENT_TIMESTAMP WHERE id = %s",
+                (user_id,)
+            )
+            
             conn.commit()
             cur.close()
             conn.close()
