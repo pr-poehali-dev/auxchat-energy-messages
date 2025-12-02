@@ -8,6 +8,7 @@ import json
 import os
 import psycopg2
 from typing import Dict, Any
+from datetime import datetime, timedelta
 
 def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     method: str = event.get('httpMethod', 'GET')
@@ -66,7 +67,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             GROUP BY receiver_id, sender_id
         )
         SELECT 
-            u.id, u.username, u.avatar_url, u.status,
+            u.id, u.username, u.avatar_url, u.last_activity,
             lm.last_message, lm.created_at,
             COALESCE(uc.unread_count, 0) as unread_count
         FROM last_messages lm
@@ -78,18 +79,23 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     
     rows = cur.fetchall()
     
-    conversations = [
-        {
+    conversations = []
+    for row in rows:
+        last_activity = row[3]
+        is_online = False
+        if last_activity:
+            time_diff = datetime.utcnow() - last_activity
+            is_online = time_diff < timedelta(minutes=5)
+        
+        conversations.append({
             'userId': row[0],
             'username': row[1],
             'avatarUrl': row[2],
-            'status': row[3],
+            'status': 'online' if is_online else 'offline',
             'lastMessage': row[4],
             'lastMessageAt': row[5].isoformat(),
             'unreadCount': row[6]
-        }
-        for row in rows
-    ]
+        })
     
     cur.close()
     conn.close()
