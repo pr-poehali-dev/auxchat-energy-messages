@@ -364,7 +364,7 @@ export default function Chat() {
         const base64Audio = base64data.split(',')[1];
         
         console.log('Uploading to backend...');
-        const uploadResponse = await fetch('https://functions.poehali.dev/upload-voice', {
+        const uploadResponse = await fetch('https://functions.poehali.dev/aa3b9434-ccb8-4c48-824f-3dbf07339f68', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
