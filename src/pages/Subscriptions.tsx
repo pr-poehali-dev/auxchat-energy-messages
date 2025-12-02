@@ -143,14 +143,26 @@ export default function Subscriptions() {
                       <p className="text-xs text-muted-foreground">Вы подписаны</p>
                     </div>
                   </button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleUnsubscribe(user.id)}
-                  >
-                    <Icon name="UserMinus" size={16} className="mr-1" />
-                    Отписаться
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => navigate(`/user-messages/${user.id}`)}
+                      className="h-9 px-3"
+                    >
+                      <Icon name="History" size={16} className="mr-1" />
+                      История
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleUnsubscribe(user.id)}
+                      className="h-9 px-3"
+                    >
+                      <Icon name="UserMinus" size={16} className="mr-1" />
+                      Отписаться
+                    </Button>
+                  </div>
                 </div>
               ))}
             </div>
