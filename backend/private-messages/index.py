@@ -68,7 +68,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             
             query = f"""
                 SELECT pm.id, pm.sender_id, pm.receiver_id, pm.text, pm.is_read, pm.created_at,
-                       u.username, NULL as avatar_url
+                       u.username, NULL as avatar_url, pm.voice_url, pm.voice_duration
                 FROM t_p53416936_auxchat_energy_messa.private_messages pm
                 JOIN t_p53416936_auxchat_energy_messa.users u ON u.id = pm.sender_id
                 WHERE (pm.sender_id = {user_id} AND pm.receiver_id = {other_user_id}) 
@@ -98,7 +98,9 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     'text': row[3],
                     'isRead': row[4],
                     'createdAt': created_at_str,
-                    'sender': {'username': row[6] if row[6] else '', 'avatarUrl': row[7] if row[7] else None}
+                    'sender': {'username': row[6] if row[6] else '', 'avatarUrl': row[7] if row[7] else None},
+                    'voiceUrl': row[8] if row[8] else None,
+                    'voiceDuration': row[9] if row[9] else None
                 })
             
             print(f'Prepared {len(messages)} messages for response')
@@ -125,14 +127,16 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             body_data = json.loads(event.get('body', '{}'))
             receiver_id = body_data.get('receiverId')
             text = body_data.get('text', '').strip()
+            voice_url = body_data.get('voiceUrl', '').strip()
+            voice_duration = body_data.get('voiceDuration')
             
-            if not receiver_id or not text:
+            if not receiver_id or (not text and not voice_url):
                 cur.close()
                 conn.close()
                 return {
                     'statusCode': 400,
                     'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-                    'body': json.dumps({'error': 'receiverId and text required'}),
+                    'body': json.dumps({'error': 'receiverId and (text or voiceUrl) required'}),
                     'isBase64Encoded': False
                 }
             
@@ -155,13 +159,31 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     'isBase64Encoded': False
                 }
             
-            escaped_text = text.replace("'", "''")
-            insert_query = f"""
-                INSERT INTO t_p53416936_auxchat_energy_messa.private_messages 
-                (sender_id, receiver_id, text) 
-                VALUES ({user_id}, {receiver_id}, '{escaped_text}') 
-                RETURNING id
-            """
+            if voice_url:
+                escaped_voice_url = voice_url.replace("'", "''")
+                if text:
+                    escaped_text = text.replace("'", "''")
+                    insert_query = f"""
+                        INSERT INTO t_p53416936_auxchat_energy_messa.private_messages 
+                        (sender_id, receiver_id, text, voice_url, voice_duration) 
+                        VALUES ({user_id}, {receiver_id}, '{escaped_text}', '{escaped_voice_url}', {voice_duration if voice_duration else 'NULL'}) 
+                        RETURNING id
+                    """
+                else:
+                    insert_query = f"""
+                        INSERT INTO t_p53416936_auxchat_energy_messa.private_messages 
+                        (sender_id, receiver_id, voice_url, voice_duration) 
+                        VALUES ({user_id}, {receiver_id}, '{escaped_voice_url}', {voice_duration if voice_duration else 'NULL'}) 
+                        RETURNING id
+                    """
+            else:
+                escaped_text = text.replace("'", "''")
+                insert_query = f"""
+                    INSERT INTO t_p53416936_auxchat_energy_messa.private_messages 
+                    (sender_id, receiver_id, text) 
+                    VALUES ({user_id}, {receiver_id}, '{escaped_text}') 
+                    RETURNING id
+                """
             cur.execute(insert_query)
             message_id = cur.fetchone()[0]
             
