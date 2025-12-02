@@ -172,8 +172,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 else:
                     insert_query = f"""
                         INSERT INTO t_p53416936_auxchat_energy_messa.private_messages 
-                        (sender_id, receiver_id, voice_url, voice_duration) 
-                        VALUES ({user_id}, {receiver_id}, '{escaped_voice_url}', {voice_duration if voice_duration else 'NULL'}) 
+                        (sender_id, receiver_id, text, voice_url, voice_duration) 
+                        VALUES ({user_id}, {receiver_id}, '', '{escaped_voice_url}', {voice_duration if voice_duration else 'NULL'}) 
                         RETURNING id
                     """
             else:
