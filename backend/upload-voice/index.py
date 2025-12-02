@@ -58,17 +58,26 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 'isBase64Encoded': False
             }
         
-        s3_access_key = os.environ.get('S3_ACCESS_KEY_ID')
-        s3_secret_key = os.environ.get('S3_SECRET_ACCESS_KEY')
-        s3_bucket = os.environ.get('S3_BUCKET_NAME', 'poehali-uploads')
-        s3_region = os.environ.get('S3_REGION', 'ru-central1')
+        s3_access_key = os.environ.get('TIMEWEB_S3_ACCESS_KEY')
+        s3_secret_key = os.environ.get('TIMEWEB_S3_SECRET_KEY')
+        s3_bucket = os.environ.get('TIMEWEB_S3_BUCKET_NAME')
+        s3_endpoint = os.environ.get('TIMEWEB_S3_ENDPOINT', 'https://s3.twcstorage.ru')
+        s3_region = os.environ.get('TIMEWEB_S3_REGION', 'ru-1')
+        
+        if not all([s3_access_key, s3_secret_key, s3_bucket]):
+            return {
+                'statusCode': 500,
+                'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                'body': json.dumps({'error': 'S3 credentials not configured'}),
+                'isBase64Encoded': False
+            }
         
         s3_client = boto3.client(
             's3',
             aws_access_key_id=s3_access_key,
             aws_secret_access_key=s3_secret_key,
             region_name=s3_region,
-            endpoint_url=f'https://storage.yandexcloud.net'
+            endpoint_url=s3_endpoint
         )
         
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
@@ -84,7 +93,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             ACL='public-read'
         )
         
-        file_url = f'https://storage.yandexcloud.net/{s3_bucket}/{filename}'
+        file_url = f'{s3_endpoint}/{s3_bucket}/{filename}'
         
         return {
             'statusCode': 200,
