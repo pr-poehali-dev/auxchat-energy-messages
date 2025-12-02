@@ -128,39 +128,39 @@ export default function Subscriptions() {
               {subscribedUsers.map((user) => (
                 <div
                   key={user.id}
-                  className="flex items-center justify-between p-3 rounded-lg bg-white hover:bg-purple-50 transition-colors"
+                  className="flex items-center gap-3 p-3 rounded-lg bg-white hover:bg-purple-50 transition-colors"
                 >
                   <button
                     onClick={() => navigate(`/profile/${user.id}`)}
-                    className="flex items-center gap-3 flex-1"
+                    className="flex items-center gap-3 flex-1 min-w-0"
                   >
-                    <Avatar className="h-12 w-12">
+                    <Avatar className="h-12 w-12 flex-shrink-0">
                       <AvatarImage src={user.avatar} alt={user.username} />
                       <AvatarFallback>{user.username[0]}</AvatarFallback>
                     </Avatar>
-                    <div className="text-left">
-                      <p className="font-semibold">{user.username}</p>
+                    <div className="text-left min-w-0">
+                      <p className="font-semibold truncate">{user.username}</p>
                       <p className="text-xs text-muted-foreground">Вы подписаны</p>
                     </div>
                   </button>
-                  <div className="flex gap-2">
+                  <div className="flex gap-1.5 flex-shrink-0">
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => navigate(`/user-messages/${user.id}`)}
-                      className="h-9 px-3"
+                      className="h-9 w-9 p-0"
+                      title="История"
                     >
-                      <Icon name="History" size={16} className="mr-1" />
-                      История
+                      <Icon name="History" size={18} />
                     </Button>
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => handleUnsubscribe(user.id)}
-                      className="h-9 px-3"
+                      className="h-9 w-9 p-0"
+                      title="Отписаться"
                     >
-                      <Icon name="UserMinus" size={16} className="mr-1" />
-                      Отписаться
+                      <Icon name="UserMinus" size={18} />
                     </Button>
                   </div>
                 </div>
